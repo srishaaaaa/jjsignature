@@ -813,7 +813,7 @@ export default function BillingAnalytics() {
                     return (
                       <tr key={order.id} className="hover:bg-[#F9FAFB]/50">
                         <td className="whitespace-nowrap px-3 py-3 font-bold text-[#10B981]">{order.invoice_no || '—'}</td>
-                        <td className="max-w-[140px] truncate px-3 py-3 font-semibold text-[#111111]">{order.customer_name}</td>
+                        <td className="max-w-[180px] break-words px-3 py-3 font-semibold text-[#111111]">{order.customer_name}</td>
                         <td className="whitespace-nowrap px-3 py-3 text-[#374151]">{order.phone ? formatPhoneDisplay(order.phone) : ''}</td>
                         <td className="px-3 py-3">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${billTypeClass}`}>{billTypeLabel}</span>

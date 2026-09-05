@@ -1256,9 +1256,9 @@ export default function Pos(props: PosProps = {}) {
 {items.length > 0 && (
                   <div className="px-3 py-2 bg-[#FAFAFA] space-y-1 border-b border-[#FDDBB4]/40 max-h-[80px] overflow-y-auto">
                     {items.map(item => (
-                <div key={item.id} className="flex justify-between text-[#111111] text-[11px]">
-                        <span className="truncate pr-2">{item.qty}x {item.name}</span>
-                        <span>{formatCurrency(item.lineTotal)}</span>
+                <div key={item.id} className="flex justify-between gap-2 text-[#111111] text-[11px]">
+                        <span className="break-words">{item.qty}x {item.name}</span>
+                        <span className="shrink-0">{formatCurrency(item.lineTotal)}</span>
                       </div>
                     ))}
                   </div>
@@ -1493,7 +1493,7 @@ export default function Pos(props: PosProps = {}) {
             </div>
             <div className="mb-4 rounded-2xl bg-violet-50 p-4">
               <div className="flex justify-between text-sm"><span className="font-bold text-violet-700">Order total</span><span className="font-black text-violet-900">{formatCurrency(total)}</span></div>
-              <div className="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-violet-200 pt-2">{items.map(item => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="truncate">{item.qty}× {item.name}</span><span className="font-bold">{formatCurrency(item.lineTotal)}</span></div>)}</div>
+              <div className="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-violet-200 pt-2">{items.map(item => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="break-words">{item.qty}× {item.name}</span><span className="font-bold shrink-0">{formatCurrency(item.lineTotal)}</span></div>)}</div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block"><span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-[#6B7280]">Deposit received *</span><input required autoFocus type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} min="0.01" max={Math.max(0, total - 0.01)} step="0.01" value={depositForm.amount} onChange={e => setDepositForm({...depositForm, amount:e.target.value})} className="w-full rounded-xl border px-3 py-2.5 text-sm font-bold outline-none focus:border-violet-600"/></label>

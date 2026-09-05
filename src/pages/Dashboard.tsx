@@ -1167,7 +1167,7 @@ export default function Dashboard() {
         </div>
         {/* Nav */}
         <nav
-          className={`flex overflow-x-auto overflow-y-hidden lg:flex-col lg:overflow-visible gap-2 px-3 py-3 lg:py-2 lg:flex-grow transition-all duration-300 hide-scrollbar ${sidebarCollapsed ? 'lg:px-2' : 'lg:px-4'}`}
+          className={`flex overflow-visible lg:flex-col gap-1 px-2 py-3 lg:gap-2 lg:py-2 lg:flex-grow transition-all duration-300 ${sidebarCollapsed ? 'lg:px-2' : 'lg:px-4'}`}
         >
           {navItems.map(item => (
             <button
@@ -1175,9 +1175,9 @@ export default function Dashboard() {
               onClick={() => handleTabClick(item.id)}
               title={item.label}
               className={[
-                'shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
+                'flex-1 min-w-0 lg:flex-none lg:shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
                 'gap-1 lg:gap-3',
-                'h-[56px] w-[64px] lg:w-full lg:h-[48px]',
+                'h-[56px] lg:w-full lg:h-[48px]',
                 sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
                 'px-0 py-1 lg:py-0',
                 'rounded-xl font-medium text-[11px] lg:text-[14px] transition-all overflow-hidden',
@@ -1199,9 +1199,9 @@ export default function Dashboard() {
               navigate('/admin-login', { replace: true })
             }}
             className={[
-              'shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
+              'flex-1 min-w-0 lg:flex-none lg:shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
               'gap-1 lg:gap-3',
-              'h-[56px] w-[64px] lg:w-full lg:h-[48px]',
+              'h-[56px] lg:w-full lg:h-[48px]',
               sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
               'px-0 py-1 lg:py-0',
               'rounded-xl font-medium text-[11px] lg:text-[14px] transition-all text-white/70 hover:bg-white/10 hover:text-white lg:mt-auto mb-1 lg:mb-4 overflow-hidden',
@@ -1316,7 +1316,7 @@ export default function Dashboard() {
                         return (
                           <tr key={o.id} className="hover:bg-[#F9FAFB]/50">
                             <td className="px-3 py-2.5 font-bold text-[#10B981] text-[11px]">{formatInvoiceNo(o.invoice_no)}</td>
-                            <td className="px-3 py-2.5 font-semibold text-[#111111] max-w-[100px] truncate">{o.customer_name}</td>
+                            <td className="px-3 py-2.5 font-semibold text-[#111111] break-words">{o.customer_name}</td>
                             <td className="px-3 py-2.5 font-black text-[#111111]">{formatCurrency(getOrderTotal(o))}</td>
                             <td className="px-3 py-2.5 text-[#7A846F] whitespace-nowrap">{new Date(o.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' })}</td>
                             <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${btClass}`}>{btLabel}</span></td>
@@ -1559,7 +1559,7 @@ export default function Dashboard() {
                             <tr className={`hover:bg-blue-50/40 align-middle ${isExpanded ? 'bg-blue-50/30' : ''}`}>
                               <td className="px-4 py-3 font-bold text-[#111111] whitespace-nowrap">{order.customer_name || '-'}</td>
                               <td className="px-4 py-3 text-[#374151] whitespace-nowrap">{order.phone ? formatPhoneDisplay(order.phone) : '-'}</td>
-                              <td className="px-4 py-3 text-[#7A846F] max-w-[140px] truncate" title={order.address || '-'}>{order.address || '-'}</td>
+                              <td className="px-4 py-3 text-[#7A846F] break-words" title={order.address || '-'}>{order.address || '-'}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-[11px] font-black">{its.length}</span>
                               </td>
@@ -1908,7 +1908,7 @@ export default function Dashboard() {
                           <div key={i} className="flex items-center justify-between text-[13px]">
                             <div className="flex items-center gap-3">
                               <span className="font-bold text-[#6B7280] w-4">{i + 1}</span>
-                              <span className="font-bold text-[#111111] truncate max-w-[120px]">{p.name}</span>
+                              <span className="font-bold text-[#111111] break-words">{p.name}</span>
                             </div>
                             <div className="flex items-center gap-4">
                               <span className="font-bold text-maroon-dark">{formatCurrency(p.revenue)}</span>
@@ -2060,7 +2060,7 @@ export default function Dashboard() {
                             return (
                               <tr key={o.id} className="hover:bg-[#F9FAFB]/50">
                                 <td className="px-3 py-2.5 font-bold text-[#10B981] text-[11px]">{formatInvoiceNo(o.invoice_no)}</td>
-                                <td className="px-3 py-2.5 font-semibold text-[#111111] max-w-[100px] truncate">{o.customer_name}</td>
+                                <td className="px-3 py-2.5 font-semibold text-[#111111] break-words">{o.customer_name}</td>
                                 <td className="px-3 py-2.5 font-black text-[#111111]">{formatCurrency(getOrderTotal(o))}</td>
                                 <td className="px-3 py-2.5 text-[#374151] whitespace-nowrap">{new Date(o.created_at).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${btClass}`}>{btLabel}</span></td>

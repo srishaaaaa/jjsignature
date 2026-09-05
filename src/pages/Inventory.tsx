@@ -191,12 +191,12 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
             {products.filter(p => p.stock_quantity > 0)
               .sort((a, b) => (b.stock_quantity * b.price) - (a.stock_quantity * a.price))
               .slice(0, 5).map((p, i) => (
-                <div key={p.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div key={p.id} className="flex flex-wrap justify-between items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-white font-black text-xs text-slate-400 shadow-sm">{i + 1}</span>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{p.stock_quantity} units • {formatCurrency(p.price)}/unit</p>
+                      <p className="font-bold text-sm text-slate-800 break-words">{p.name}</p>
+                      <p className="text-[10px] text-slate-500">{p.stock_quantity} units • {formatCurrency(p.price)}/unit</p>
                     </div>
                   </div>
                   <p className="font-black text-emerald-600 shrink-0 ml-2">{formatCurrency(p.stock_quantity * p.price)}</p>
@@ -238,26 +238,48 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
         ) : logs.length === 0 ? (
           <p className="text-center py-10 text-sm font-bold text-[#9CA3AF]">No stock movements in this date range.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-[#F8F7F4] text-[10px] font-black uppercase tracking-wider text-[#737B72]">
-                <tr>{['Date', 'Product', 'Category', 'Reason', 'Old Qty', 'New Qty', 'Change'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
-              </thead>
-              <tbody className="divide-y divide-[#F0EEE9]">
-                {logs.map(log => (
-                  <tr key={log.id} className="hover:bg-orange-50/30">
-                    <td className="px-4 py-3 text-[11px] text-[#6B7280] whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-MY')}<br/><span className="text-[10px] opacity-70">{new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span></td>
-                    <td className="px-4 py-3 font-bold text-[#111111] max-w-[140px] truncate">{log.products?.name || '—'}</td>
-                    <td className="px-4 py-3 text-[#6B7280] text-xs">{log.products?.category || '—'}</td>
-                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span></td>
-                    <td className="px-4 py-3 font-bold text-[#374151]">{log.old_quantity}</td>
-                    <td className="px-4 py-3 font-bold text-[#374151]">{log.new_quantity}</td>
-                    <td className={`px-4 py-3 font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Mobile card list — full product name always visible */}
+            <div className="space-y-3 p-4 md:hidden">
+              {logs.map(log => (
+                <div key={log.id} className="rounded-2xl border border-[#FDDBB4]/40 bg-[#FAFAFA] p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[13px] text-[#111111] break-words">{log.products?.name || '—'}</p>
+                      <p className="text-[11px] text-[#6B7280] mt-0.5">{log.products?.category || '—'}</p>
+                    </div>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase whitespace-nowrap ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span>
+                  </div>
+                  <div className="mt-2.5 flex items-center justify-between text-[11px] text-[#6B7280]">
+                    <span>{new Date(log.created_at).toLocaleDateString('en-MY')} · {new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span>
+                    <span className="font-semibold text-[#374151]">{log.old_quantity} → {log.new_quantity}</span>
+                    <span className={`font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-[#F8F7F4] text-[10px] font-black uppercase tracking-wider text-[#737B72]">
+                  <tr>{['Date', 'Product', 'Category', 'Reason', 'Old Qty', 'New Qty', 'Change'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0EEE9]">
+                  {logs.map(log => (
+                    <tr key={log.id} className="hover:bg-orange-50/30">
+                      <td className="px-4 py-3 text-[11px] text-[#6B7280] whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-MY')}<br/><span className="text-[10px] opacity-70">{new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span></td>
+                      <td className="px-4 py-3 font-bold text-[#111111] max-w-[220px]">{log.products?.name || '—'}</td>
+                      <td className="px-4 py-3 text-[#6B7280] text-xs">{log.products?.category || '—'}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span></td>
+                      <td className="px-4 py-3 font-bold text-[#374151]">{log.old_quantity}</td>
+                      <td className="px-4 py-3 font-bold text-[#374151]">{log.new_quantity}</td>
+                      <td className={`px-4 py-3 font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -605,8 +627,62 @@ export default function Inventory() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {loading ? (
+              <p className="text-center py-12 text-[#6B7280] font-bold">Loading inventory...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center py-12 text-[#6B7280] font-bold">No products found.</p>
+            ) : filtered.map(p => {
+              const status = getStatus(p)
+              return (
+                <div key={String(p.id)} className="bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#111111] text-sm break-words">{p.name}</p>
+                      <p className="text-xs text-[#6B7280] mt-0.5">{p.category || '—'}</p>
+                    </div>
+                    {status === 'out' ? (
+                      <span className="shrink-0 whitespace-nowrap bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">Out of Stock</span>
+                    ) : status === 'low' ? (
+                      <span className="shrink-0 whitespace-nowrap bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1 w-fit">
+                        <AlertTriangle size={10} /> Low Stock
+                      </span>
+                    ) : (
+                      <span className="shrink-0 whitespace-nowrap bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">In Stock</span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-center gap-4 text-sm">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-[#9CA3AF]">Stock</p>
+                      <p className={`font-black ${status === 'out' ? 'text-red-600' : status === 'low' ? 'text-orange-600' : 'text-[#111111]'}`}>{p.stock_quantity}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-[#9CA3AF]">Alert At</p>
+                      <p className="font-semibold text-[#374151]">{p.low_stock_alert || 5}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-[#9CA3AF]">Price</p>
+                      <p className="font-black text-[#111111]">{formatCurrency(p.price)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5">
+                    <button onClick={() => openAdjust(p)}
+                      className="flex-1 flex items-center justify-center gap-1 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2.5 py-2 rounded-lg text-[11px] font-black hover:bg-orange-100">
+                      <RefreshCw size={11} /> Adjust
+                    </button>
+                    <button onClick={() => startEditProduct(p)}
+                      className="p-2 bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
@@ -788,9 +864,9 @@ export default function Inventory() {
               </div>
               <div className="overflow-y-auto max-h-[600px] divide-y divide-[#FDDBB4]/30">
                 {products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())).map(p => (
-                  <div key={String(p.id)} className={`flex items-center justify-between px-4 py-3 hover:bg-[#FAFAFA] ${editingProduct?.id === p.id ? 'bg-orange-50 border-l-4 border-[#B08A1C]' : ''}`}>
+                  <div key={String(p.id)} className={`flex items-center justify-between gap-2 px-4 py-3 hover:bg-[#FAFAFA] ${editingProduct?.id === p.id ? 'bg-orange-50 border-l-4 border-[#B08A1C]' : ''}`}>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-[#111111] truncate">{p.name}</p>
+                      <p className="font-bold text-sm text-[#111111] break-words">{p.name}</p>
                       <p className="text-[11px] text-[#6B7280]">{p.category || 'No category'} · {formatCurrency(p.price)} · Stock: <span className={`font-black ${getStatus(p) === 'out' ? 'text-red-600' : getStatus(p) === 'low' ? 'text-orange-600' : 'text-green-600'}`}>{p.stock_quantity}</span></p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">
