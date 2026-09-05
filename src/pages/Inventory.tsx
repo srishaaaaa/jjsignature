@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Trash2, Download, TrendingUp, PieChart } from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Trash2, Download, TrendingUp, PieChart, Boxes, Tag, BarChart3, Layers, IndianRupee, History } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
 import { useSound } from '../context/SoundContext'
+import LowStockAlarmModal from '../components/LowStockAlarmModal'
 
 interface InventoryProduct {
   id: string | number
@@ -29,7 +30,7 @@ interface Category {
 interface AdjustModal {
   product: InventoryProduct
   qty: string
-  adjustType: 'restock' | 'loss' | 'return'
+  adjustType: 'restock' | 'loss' | 'return' | 'reconciliation'
   note: string
 }
 
@@ -75,6 +76,14 @@ interface InventoryLog {
 
 type DatePreset = 'all' | 'today' | 'week' | 'month' | 'custom'
 
+const REASON_COLORS: Record<string, string> = {
+  restock: 'bg-emerald-100 text-emerald-700',
+  sale: 'bg-blue-100 text-blue-700',
+  return: 'bg-purple-100 text-purple-700',
+  loss: 'bg-red-100 text-red-700',
+  manual_adjustment: 'bg-orange-100 text-orange-700',
+}
+
 function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProduct[]; downloadCSV: () => void }) {
   const [datePreset, setDatePreset] = useState<DatePreset>('week')
   const [fromDate, setFromDate] = useState(() => {
@@ -114,14 +123,6 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
   const totalRestocked = logs.filter(l => l.adjustment > 0).reduce((s, l) => s + l.adjustment, 0)
   const totalLost = logs.filter(l => l.adjustment < 0 && l.reason !== 'sale').reduce((s, l) => s + Math.abs(l.adjustment), 0)
   const totalSold = logs.filter(l => l.reason === 'sale').reduce((s, l) => s + Math.abs(l.adjustment), 0)
-
-  const REASON_COLORS: Record<string, string> = {
-    restock: 'bg-emerald-100 text-emerald-700',
-    sale: 'bg-blue-100 text-blue-700',
-    return: 'bg-purple-100 text-purple-700',
-    loss: 'bg-red-100 text-red-700',
-    manual_adjustment: 'bg-orange-100 text-orange-700',
-  }
 
   return (
     <div className="space-y-5">
@@ -294,12 +295,14 @@ export default function Inventory() {
   const [products, setProducts] = useState<InventoryProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
+  const [filter, setFilter] = useState<'all' | 'ok' | 'low' | 'out'>('all')
   const [adjustModal, setAdjustModal] = useState<AdjustModal | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState('')
-  const [stockAlertNotice, setStockAlertNotice] = useState<string | null>(null)
-  const hasNotifiedStock = useRef(false)
+  const [ackedLowStockIds, setAckedLowStockIds] = useState<Set<string | number>>(new Set())
+  const [historyModal, setHistoryModal] = useState<InventoryProduct | null>(null)
+  const [historyLogs, setHistoryLogs] = useState<InventoryLog[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   // Product form state
   const [productForm, setProductForm] = useState<ProductForm>(EMPTY_FORM)
@@ -368,23 +371,18 @@ export default function Inventory() {
     void fetchCategories()
   }, [fetchProducts, fetchCategories])
 
-  // Announce current low/out-of-stock items with a sound every time this tab
-  // is opened (the component fully unmounts when switching away, so this
-  // fires fresh on each visit — not just when a new item first crosses the
-  // threshold).
-  useEffect(() => {
-    if (loading || hasNotifiedStock.current) return
-    hasNotifiedStock.current = true
-    const active = products.filter(p => p.is_active !== false)
-    const low = active.filter(p => getStatus(p) === 'low')
-    const out = active.filter(p => getStatus(p) === 'out')
-    if (low.length + out.length === 0) return
-    play('alert')
-    const parts: string[] = []
-    if (out.length > 0) parts.push(`${out.length} out of stock`)
-    if (low.length > 0) parts.push(`${low.length} running low`)
-    setStockAlertNotice(parts.join(' · '))
-  }, [loading, products, play])
+  // Low-stock alarm items — fires fresh every time this tab is opened (the
+  // component fully unmounts when switching away, resetting ackedLowStockIds),
+  // and re-appears mid-visit if a *new* item crosses the threshold after an
+  // adjustment, since only acknowledged ids are filtered out.
+  const lowStockAlarmItems = products
+    .filter(p => p.is_active !== false && getStatus(p) !== 'ok')
+    .map(p => ({ id: p.id, name: p.name, category: p.category, stock: p.stock_quantity, alertLimit: p.low_stock_alert || 5 }))
+  const unackedLowStockItems = lowStockAlarmItems.filter(i => !ackedLowStockIds.has(i.id))
+
+  const acknowledgeLowStockAlarm = () => {
+    setAckedLowStockIds(prev => new Set([...prev, ...lowStockAlarmItems.map(i => i.id)]))
+  }
 
   // ── Stock Management ──────────────────────────────────────────────
   // Retired/hidden products (is_active = false) stay manageable from the
@@ -396,6 +394,7 @@ export default function Inventory() {
   const filtered = activeProducts.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
     const status = getStatus(p)
+    if (filter === 'ok') return matchSearch && status === 'ok'
     if (filter === 'low') return matchSearch && status === 'low'
     if (filter === 'out') return matchSearch && status === 'out'
     return matchSearch
@@ -403,6 +402,7 @@ export default function Inventory() {
 
   const lowCount = activeProducts.filter(p => getStatus(p) === 'low').length
   const outCount = activeProducts.filter(p => getStatus(p) === 'out').length
+  const inStockCount = activeProducts.length - lowCount - outCount
   const stockValue = activeProducts.reduce((s, p) => s + (p.stock_quantity * p.price), 0)
 
   const openAdjust = (product: InventoryProduct) => {
@@ -411,15 +411,37 @@ export default function Inventory() {
     setAdjustModal({ product, qty: '', adjustType: 'restock', note: '' })
   }
 
+  const openHistory = async (product: InventoryProduct) => {
+    setHistoryModal(product)
+    setHistoryLoading(true)
+    const { data } = await supabase
+      .from('inventory_logs')
+      .select('*, products(name, category)')
+      .eq('product_id', product.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setHistoryLogs((data as InventoryLog[]) || [])
+    setHistoryLoading(false)
+  }
+
   const saveAdjust = async () => {
     if (!adjustModal) return
     const { product, qty, adjustType, note } = adjustModal
     const enteredQty = parseFloat(qty)
-    if (isNaN(enteredQty) || enteredQty <= 0) { setNotice('Please enter a valid quantity.'); return }
-    const isAddition = adjustType === 'restock' || adjustType === 'return'
-    const adjustment = isAddition ? enteredQty : -enteredQty
-    const newQtyNum = product.stock_quantity + adjustment
-    if (newQtyNum < 0) { setNotice('Cannot remove more than the current stock.'); return }
+    if (isNaN(enteredQty) || enteredQty < 0) { setNotice('Please enter a valid quantity.'); return }
+    let newQtyNum: number
+    let adjustment: number
+    if (adjustType === 'reconciliation') {
+      newQtyNum = enteredQty
+      adjustment = newQtyNum - product.stock_quantity
+      if (adjustment === 0) { setNotice('New count matches the current stock — nothing to reconcile.'); return }
+    } else {
+      if (enteredQty <= 0) { setNotice('Please enter a valid quantity.'); return }
+      const isAddition = adjustType === 'restock' || adjustType === 'return'
+      adjustment = isAddition ? enteredQty : -enteredQty
+      newQtyNum = product.stock_quantity + adjustment
+      if (newQtyNum < 0) { setNotice('Cannot remove more than the current stock.'); return }
+    }
     setSaving(true)
     try {
       const { error: updateErr } = await supabase
@@ -428,12 +450,15 @@ export default function Inventory() {
         .eq('id', product.id)
       if (updateErr) throw updateErr
 
+      // 'reconciliation' isn't a DB-recognized reason yet (inventory_logs
+      // check constraint only allows sale/restock/return/manual_adjustment/loss),
+      // so it's logged as a manual adjustment until that constraint is widened.
       await supabase.from('inventory_logs').insert({
         product_id: product.id,
         old_quantity: product.stock_quantity,
         new_quantity: newQtyNum,
         adjustment,
-        reason: adjustType,
+        reason: adjustType === 'reconciliation' ? 'manual_adjustment' : adjustType,
         reference_id: note || null,
       }).then(() => {})
 
@@ -579,24 +604,21 @@ export default function Inventory() {
         </button>
       </div>
 
-      {stockAlertNotice && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3">
-          <div className="flex items-center gap-2 text-orange-800">
-            <AlertTriangle size={18} className="shrink-0" />
-            <p className="text-sm font-bold">Stock alert: {stockAlertNotice}. Check the Stock Management tab below.</p>
-          </div>
-          <button onClick={() => setStockAlertNotice(null)} className="shrink-0 text-orange-700 hover:text-orange-900">
-            <X size={16} />
-          </button>
-        </div>
+      {unackedLowStockItems.length > 0 && (
+        <LowStockAlarmModal items={unackedLowStockItems} onAcknowledge={acknowledgeLowStockAlarm} />
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-[#FDDBB4]/60 pb-2 overflow-x-auto">
-        {([['stock', 'Stock Management'], ['products', 'Add / Edit Products'], ['categories', 'Categories'], ['analytics', 'Analytics & Reports']] as const).map(([key, label]) => (
+      <div className="flex flex-wrap items-center gap-2 bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm p-2 overflow-x-auto">
+        {([
+          ['stock', 'Stock Management', Package],
+          ['products', 'Add / Edit Products', Boxes],
+          ['categories', 'Categories', Tag],
+          ['analytics', 'Analytics & Reports', BarChart3],
+        ] as const).map(([key, label, Icon]) => (
           <button key={key} onClick={() => setActiveTab(key)}
-            className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors whitespace-nowrap ${activeTab === key ? 'bg-[#B08A1C] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
-            {label}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors whitespace-nowrap ${activeTab === key ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#FAFAFA]'}`}>
+            <Icon size={16} /> {label}
           </button>
         ))}
       </div>
@@ -607,33 +629,52 @@ export default function Inventory() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Total Products', value: activeProducts.length, color: 'text-[#111111]', bg: 'bg-white' },
-              { label: 'Low Stock', value: lowCount, color: 'text-orange-600', bg: 'bg-orange-50' },
-              { label: 'Out of Stock', value: outCount, color: 'text-red-600', bg: 'bg-red-50' },
-              { label: 'Stock Value', value: formatCurrency(stockValue), color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Total SKUs', value: activeProducts.length, iconBg: 'bg-[#141414]', iconColor: 'text-[#D9A62E]', Icon: Layers },
+              { label: 'Total Stock', value: `${activeProducts.reduce((s, p) => s + p.stock_quantity, 0)} Units`, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', Icon: Package },
+              { label: 'Low Stock Items', value: lowCount + outCount, iconBg: 'bg-amber-50', iconColor: 'text-amber-600', Icon: AlertTriangle },
+              { label: 'Stock Valuation', value: formatCurrency(stockValue), iconBg: 'bg-[#FFF8F2]', iconColor: 'text-[#B08A1C]', Icon: IndianRupee },
             ].map((card, i) => (
-              <div key={i} className={`rounded-2xl border border-[#FDDBB4]/60 p-4 shadow-sm overflow-hidden ${card.bg}`}>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280] mb-1">{card.label}</p>
-                <p className={`text-xl sm:text-2xl font-black break-words ${card.color}`}>{card.value}</p>
+              <div key={i} className="flex items-center gap-3 rounded-2xl border border-[#FDDBB4]/60 bg-white p-4 shadow-sm overflow-hidden">
+                <span className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl ${card.iconBg} ${card.iconColor}`}>
+                  <card.Icon size={20} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold text-[#6B7280] mb-0.5">{card.label}</p>
+                  <p className="text-xl font-black text-[#111111] break-words">{card.value}</p>
+                </div>
               </div>
             ))}
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm p-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
-                className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#FDDBB4]/60 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SKU name, category..."
+                className="w-full pl-9 pr-4 py-2.5 bg-[#FAFAFA] border border-[#FDDBB4]/40 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" />
             </div>
-            <div className="flex gap-2">
-              {(['all', 'low', 'out'] as const).map(f => (
+            <div className="flex flex-wrap gap-2">
+              {([
+                ['all', `All (${activeProducts.length})`],
+                ['ok', `In Stock (${inStockCount})`],
+                ['low', `Low Stock (${lowCount})`],
+                ['out', `Out of Stock (${outCount})`],
+              ] as const).map(([f, label]) => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`px-4 py-2 rounded-xl text-sm font-black uppercase tracking-wider ${filter === f ? 'bg-[#B08A1C] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
-                  {f === 'all' ? 'All' : f === 'low' ? 'Low' : 'Out'}
+                  className={`px-3.5 py-2 rounded-xl text-[12px] font-black whitespace-nowrap transition-colors ${
+                    filter === f
+                      ? f === 'out' ? 'bg-red-600 text-white' : f === 'low' ? 'bg-amber-500 text-white' : f === 'ok' ? 'bg-emerald-600 text-white' : 'bg-[#141414] text-white'
+                      : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'
+                  }`}>
+                  {label}
                 </button>
               ))}
             </div>
+            <button onClick={() => { void fetchProducts(); void fetchCategories() }}
+              title="Refresh"
+              className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
+              <RefreshCw size={16} />
+            </button>
           </div>
 
           {/* Mobile card list */}
@@ -680,7 +721,11 @@ export default function Inventory() {
                       className="flex-1 flex items-center justify-center gap-1 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2.5 py-2 rounded-lg text-[11px] font-black hover:bg-orange-100">
                       <RefreshCw size={11} /> Adjust
                     </button>
-                    <button onClick={() => startEditProduct(p)}
+                    <button onClick={() => void openHistory(p)} title="Stock history"
+                      className="p-2 bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
+                      <History size={14} />
+                    </button>
+                    <button onClick={() => startEditProduct(p)} title="Edit product"
                       className="p-2 bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
                       <Edit2 size={14} />
                     </button>
@@ -696,49 +741,47 @@ export default function Inventory() {
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
                   <tr>
-                    {['Product', 'Category', 'Stock', 'Alert At', 'Status', 'Price', 'Actions'].map(h => (
+                    {['Product', 'Category', 'Stock Level', 'Alert At', 'Selling Price', 'Actions'].map(h => (
                       <th key={h} className="px-4 py-3 text-[11px] font-black uppercase tracking-wider text-[#374151] whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={7} className="text-center py-12 text-[#6B7280] font-bold">Loading inventory...</td></tr>
+                    <tr><td colSpan={6} className="text-center py-12 text-[#6B7280] font-bold">Loading inventory...</td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-12 text-[#6B7280] font-bold">No products found.</td></tr>
+                    <tr><td colSpan={6} className="text-center py-12 text-[#6B7280] font-bold">No products found.</td></tr>
                   ) : filtered.map(p => {
                     const status = getStatus(p)
+                    const pillClass = status === 'out' ? 'bg-red-50 text-red-700 border-red-200' : status === 'low' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     return (
                       <tr key={String(p.id)} className="border-b border-[#FDDBB4]/20 hover:bg-[#FAFAFA]">
                         <td className="px-4 py-3 font-bold text-[#111111] text-sm">{p.name}</td>
                         <td className="px-4 py-3 text-sm text-[#374151]">{p.category || '—'}</td>
                         <td className="px-4 py-3">
-                          <span className={`text-sm font-black ${status === 'out' ? 'text-red-600' : status === 'low' ? 'text-orange-600' : 'text-[#111111]'}`}>
-                            {p.stock_quantity}
+                          <span className={`inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-black border ${pillClass}`}>
+                            {status === 'low' && <AlertTriangle size={10} />}
+                            {p.stock_quantity} Units
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-[#374151] font-semibold">{p.low_stock_alert || 5}</td>
-                        <td className="px-4 py-3">
-                          {status === 'out' ? (
-                            <span className="whitespace-nowrap bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">Out of Stock</span>
-                          ) : status === 'low' ? (
-                            <span className="whitespace-nowrap bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1 w-fit">
-                              <AlertTriangle size={10} /> Low Stock
-                            </span>
-                          ) : (
-                            <span className="whitespace-nowrap bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">In Stock</span>
-                          )}
+                        <td className="px-4 py-3 text-sm font-black text-[#111111] whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            {formatCurrency(p.price)}
+                            <button onClick={() => startEditProduct(p)} title="Edit product" className="text-[#9CA3AF] hover:text-[#B08A1C]">
+                              <Edit2 size={12} />
+                            </button>
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-sm font-black text-[#111111] whitespace-nowrap">{formatCurrency(p.price)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => openAdjust(p)}
                               className="flex items-center gap-1 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2.5 py-1.5 rounded-lg text-[11px] font-black hover:bg-orange-100">
                               <RefreshCw size={11} /> Adjust
                             </button>
-                            <button onClick={() => startEditProduct(p)}
+                            <button onClick={() => void openHistory(p)} title="Stock history"
                               className="p-1.5 bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
-                              <Edit2 size={13} />
+                              <History size={13} />
                             </button>
                           </div>
                         </td>
@@ -987,29 +1030,34 @@ export default function Inventory() {
             <div className="space-y-4">
               <div>
                 <label className="block text-[10px] font-black uppercase text-[#374151] mb-1.5">Reason</label>
-                <select value={adjustModal.adjustType} onChange={e => setAdjustModal(m => m ? { ...m, adjustType: e.target.value as AdjustModal['adjustType'] } : m)}
+                <select value={adjustModal.adjustType} onChange={e => setAdjustModal(m => m ? { ...m, adjustType: e.target.value as AdjustModal['adjustType'], qty: '' } : m)}
                   className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C] bg-white">
                   <option value="restock">Restock (received new stock)</option>
                   <option value="loss">Loss / Damaged</option>
                   <option value="return">Customer Return</option>
+                  <option value="reconciliation">Reconciliation (set exact count)</option>
                 </select>
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase text-[#374151] mb-1.5">
-                  Quantity to {adjustModal.adjustType === 'loss' ? 'Deduct' : 'Add'}
+                  {adjustModal.adjustType === 'reconciliation'
+                    ? 'New Exact Stock Count'
+                    : `Quantity to ${adjustModal.adjustType === 'loss' ? 'Deduct' : 'Add'}`}
                 </label>
                 <input type="number" min="0" value={adjustModal.qty} onChange={e => setAdjustModal(m => m ? { ...m, qty: e.target.value } : m)}
-                  placeholder="e.g. 50"
+                  placeholder={adjustModal.adjustType === 'reconciliation' ? `Current: ${adjustModal.product.stock_quantity}` : 'e.g. 50'}
                   className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C] text-right" />
                 {adjustModal.qty !== '' && !isNaN(parseFloat(adjustModal.qty)) && (() => {
                   const entered = parseFloat(adjustModal.qty)
+                  const isReconciliation = adjustModal.adjustType === 'reconciliation'
                   const isAddition = adjustModal.adjustType === 'restock' || adjustModal.adjustType === 'return'
-                  const newTotal = adjustModal.product.stock_quantity + (isAddition ? entered : -entered)
+                  const newTotal = isReconciliation ? entered : adjustModal.product.stock_quantity + (isAddition ? entered : -entered)
+                  const change = newTotal - adjustModal.product.stock_quantity
                   return (
                     <p className="text-[11px] text-[#6B7280] mt-1 text-right">
                       New Stock: <span className="font-black text-[#111111]">{newTotal}</span>{' '}
-                      (Change: <span className={isAddition ? 'text-green-600 font-black' : 'text-red-600 font-black'}>
-                        {isAddition ? '+' : '-'}{entered}
+                      (Change: <span className={change >= 0 ? 'text-green-600 font-black' : 'text-red-600 font-black'}>
+                        {change >= 0 ? '+' : ''}{change}
                       </span>)
                     </p>
                   )
@@ -1028,6 +1076,61 @@ export default function Inventory() {
                   {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Stock History Modal ── */}
+      {historyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 bg-[#141414] px-5 py-4">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#D9A62E]">
+                  <History size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-white font-black text-[14px] leading-tight">Stock History</p>
+                  <p className="text-white/60 text-[11px] font-semibold leading-tight mt-0.5 truncate">{historyModal.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setHistoryModal(null)} className="shrink-0 p-2 rounded-xl hover:bg-white/10 text-white/70 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-5 py-3 border-b border-[#FDDBB4]/40 bg-[#FAFAFA] flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase text-[#9CA3AF]">Live Stock</p>
+                <p className="text-lg font-black text-[#111111]">{historyModal.stock_quantity} Units</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black uppercase text-[#9CA3AF]">Category</p>
+                <p className="text-sm font-bold text-[#374151]">{historyModal.category || '—'}</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {historyLoading ? (
+                <p className="text-center py-10 text-sm font-bold text-[#6B7280]">Loading...</p>
+              ) : historyLogs.length === 0 ? (
+                <p className="text-center py-10 text-sm font-bold text-[#9CA3AF]">No stock movements recorded for this product yet.</p>
+              ) : historyLogs.map(log => (
+                <div key={log.id} className="rounded-2xl border border-[#FDDBB4]/40 bg-[#FAFAFA] p-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_', ' ')}</span>
+                    <span className="text-[11px] text-[#9CA3AF] font-semibold whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-IN')} · {new Date(log.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className={`font-black ${log.adjustment >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {log.adjustment >= 0 ? '+' : ''}{log.adjustment}
+                    </span>
+                    <span className="text-sm font-bold text-[#374151]">{log.old_quantity} → {log.new_quantity}</span>
+                  </div>
+                  {log.reference_id && <p className="mt-1.5 text-[11px] text-[#9CA3AF] italic">{log.reference_id}</p>}
+                </div>
+              ))}
             </div>
           </div>
         </div>

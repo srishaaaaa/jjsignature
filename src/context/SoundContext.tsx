@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type SoundType = 'success' | 'error' | 'alert' | 'bell';
+type SoundType = 'success' | 'error' | 'alert' | 'bell' | 'buzzer';
 
 interface SoundContextType {
   play: (type: SoundType) => void;
@@ -9,6 +9,26 @@ interface SoundContextType {
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
+
+// A single shared AudioContext, created lazily on first use and reused for
+// every beep thereafter. Browsers cap the number of concurrent AudioContexts
+// (Chrome allows only a handful); the low-stock alarm alone calls play()
+// every ~1.4s while it's showing, so creating a fresh one per call would
+// exhaust that limit within seconds and make sounds (and eventually the
+// tab) stutter.
+let sharedAudioCtx: AudioContext | null = null
+const getAudioContext = (): AudioContext | null => {
+  try {
+    if (!sharedAudioCtx) {
+      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext
+      sharedAudioCtx = new Ctor()
+    }
+    if (sharedAudioCtx.state === 'suspended') void sharedAudioCtx.resume()
+    return sharedAudioCtx
+  } catch {
+    return null
+  }
+}
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -24,8 +44,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     if (!soundEnabled) return;
 
     try {
-      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
-      const ctx = new AudioContext();
+      const ctx = getAudioContext();
+      if (!ctx) return;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -72,6 +92,20 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
         osc.start(now);
         osc.stop(now + 0.6);
+      } else if (type === 'buzzer') {
+        // Urgent two-tone siren, loud and unmistakable — used for the
+        // persistent low-stock alarm, distinct from the short 'alert' beep.
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.setValueAtTime(660, now + 0.15);
+        osc.frequency.setValueAtTime(880, now + 0.3);
+        osc.frequency.setValueAtTime(660, now + 0.45);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.03);
+        gain.gain.setValueAtTime(0.35, now + 0.55);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+        osc.start(now);
+        osc.stop(now + 0.65);
       }
     } catch (e) {
       console.warn('Audio API not supported or user not interacted yet.', e);

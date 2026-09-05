@@ -5,7 +5,7 @@ import { useAuthStore, useProductStore, useVariantStore, useAdminAuthStore } fro
 import { BRAND_EN } from './lib/brand'
 import { clearLocalOrders } from './lib/ordersFallback'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
-import LowStockAlert from './components/LowStockAlert'
+import { debounce } from './lib/debounce'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Pos = lazy(() => import('./pages/Pos'))
@@ -84,10 +84,15 @@ function AppShell() {
       return
     }
 
+    // A single sale can touch several product rows at once (one stock update
+    // per line item), which would otherwise fire a full products re-fetch —
+    // and a re-render everywhere products are read — once per row. Debounce
+    // so a burst of changes collapses into one re-fetch.
+    const debouncedFetchProducts = debounce(() => { void fetchProducts() }, 400)
     const productChannel = supabase
       .channel('admin-products-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-        void fetchProducts()
+        debouncedFetchProducts()
       })
       .subscribe()
 
@@ -164,7 +169,6 @@ function AppShell() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
-      <LowStockAlert />
     </div>
   )
 }

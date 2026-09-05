@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Receipt, Plus, Trash2, X, AlertTriangle, Download } from 'lucide-react'
+import { Receipt, Plus, Trash2, X, AlertTriangle, Download, CalendarDays, CalendarRange, CalendarClock, Wallet } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
 
@@ -182,15 +182,20 @@ export default function Expenses() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {[
-              { label: 'Today', value: formatCurrency(totalToday), color: 'text-red-600' },
-              { label: 'This Week', value: formatCurrency(totalWeek), color: 'text-red-600' },
-              { label: 'This Month', value: formatCurrency(totalMonth), color: 'text-red-600' },
-              { label: 'This Year', value: formatCurrency(totalYear), color: 'text-red-600' },
-              { label: 'Total All Time', value: formatCurrency(totalAll), color: 'text-[#111111]' },
+              { label: 'Today', value: formatCurrency(totalToday), Icon: CalendarDays, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+              { label: 'This Week', value: formatCurrency(totalWeek), Icon: CalendarRange, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+              { label: 'This Month', value: formatCurrency(totalMonth), Icon: CalendarClock, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+              { label: 'This Year', value: formatCurrency(totalYear), Icon: Receipt, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+              { label: 'Total All Time', value: formatCurrency(totalAll), Icon: Wallet, iconBg: 'bg-[#141414]', iconColor: 'text-[#D9A62E]' },
             ].map((c, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#FDDBB4]/60 p-3 sm:p-4 shadow-sm">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280] mb-1">{c.label}</p>
-                <p className={`text-[16px] xl:text-[20px] font-black ${c.color} truncate`} title={c.value}>{c.value}</p>
+              <div key={i} className="flex items-center gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 p-3 sm:p-4 shadow-sm overflow-hidden">
+                <span className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} ${c.iconColor}`}>
+                  <c.Icon size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280] mb-0.5">{c.label}</p>
+                  <p className="text-[15px] xl:text-[18px] font-black text-[#111111] truncate" title={c.value}>{c.value}</p>
+                </div>
               </div>
             ))}
           </div>

@@ -3,7 +3,7 @@ import {
   BarChart2, Trash2, Edit2, List, ShoppingCart, LayoutDashboard,
   Box, Receipt, AlertCircle, Power, Download, TrendingUp,
   Package, Search, RefreshCw, ShieldCheck, ShieldOff, Trophy,
-  MessageCircle, ChevronDown, Eye, FileText, Printer, X, Users, AlertTriangle,
+  MessageCircle, ChevronDown, Eye, FileText, Printer, X, Users, AlertTriangle, Tag, CheckCircle2, Repeat,
 } from 'lucide-react'
 
 // Custom Indian Rupee icon — replaces the generic dollar-sign icon
@@ -41,6 +41,7 @@ import { formatCurrency, normalizeOrderMode, toNumber } from '../lib/retail'
 import { normalizeStructuredOrderItem, formatInvoiceNo } from '../lib/retail'
 import { formatPhoneDisplay } from '../lib/phone'
 import { Invoice } from '../components/Invoice'
+import LowStockAlarmModal from '../components/LowStockAlarmModal'
 import Expenses from './Expenses'
 import Attendance from './Attendance'
 import StaffPunch from './StaffPunch'
@@ -197,6 +198,19 @@ export default function Dashboard() {
   const [usersError, setUsersError] = useState('')
   const [userSearch, setUserSearch] = useState('')
   const [roleUpdating, setRoleUpdating] = useState<string | null>(null)
+
+  // Low-stock alarm — fires once per Dashboard mount (i.e. every login /
+  // every fresh navigation into the admin area), independent of which tab
+  // is open. The Inventory tab has its own separate alarm that fires every
+  // time that tab is opened.
+  const [ackedLowStockIds, setAckedLowStockIds] = useState<Set<string | number>>(new Set())
+  const loginLowStockItems = products
+    .filter(p => p.isActive && p.stockQuantity <= (p.lowStockAlert || 5))
+    .map(p => ({ id: p.id, name: p.name, category: p.category, stock: p.stockQuantity, alertLimit: p.lowStockAlert || 5 }))
+  const unackedLoginLowStockItems = loginLowStockItems.filter(i => !ackedLowStockIds.has(i.id))
+  const acknowledgeLoginLowStockAlarm = () => {
+    setAckedLowStockIds(prev => new Set([...prev, ...loginLowStockItems.map(i => i.id)]))
+  }
 
   const isAdmin = true // bypassed for local demo
   const l = (en: string, _ta?: string) => en
@@ -1128,6 +1142,9 @@ export default function Dashboard() {
 
   return (
     <div className="admin-shell h-screen min-h-screen bg-bgMain flex flex-col lg:flex-row overflow-hidden">
+      {unackedLoginLowStockItems.length > 0 && (
+        <LowStockAlarmModal items={unackedLoginLowStockItems} onAcknowledge={acknowledgeLoginLowStockAlarm} />
+      )}
       {/* Sidebar */}
       <aside
         className={[
@@ -2684,19 +2701,22 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <div className="rounded-xl border border-[#FDDBB4] bg-[#FBFAF6] px-3 py-3 shadow-sm">
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B08A1C]">Total Coupons</p>
-                  <p className="mt-1 text-[20px] font-black text-[#111111]">{coupons.length}</p>
-                </div>
-                <div className="rounded-xl border border-[#FDDBB4] bg-[#FBFAF6] px-3 py-3 shadow-sm">
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B08A1C]">Active</p>
-                  <p className="mt-1 text-[20px] font-black text-[#B08A1C]">{coupons.filter(c => c.is_active).length}</p>
-                </div>
-                <div className="rounded-xl border border-[#FDDBB4] bg-[#FBFAF6] px-3 py-3 shadow-sm">
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#B08A1C]">Used</p>
-                  <p className="mt-1 text-[20px] font-black text-[#111111]">{coupons.reduce((acc, c) => acc + (c.usage_count || 0), 0)}</p>
-                </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {[
+                  { label: 'Total Coupons', value: coupons.length, Icon: Tag, iconBg: 'bg-[#FFF8F2]', iconColor: 'text-[#B08A1C]' },
+                  { label: 'Active', value: coupons.filter(c => c.is_active).length, Icon: CheckCircle2, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+                  { label: 'Used', value: coupons.reduce((acc, c) => acc + (c.usage_count || 0), 0), Icon: Repeat, iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
+                ].map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-2xl border border-[#FDDBB4] bg-white px-4 py-3 shadow-sm">
+                    <span className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} ${c.iconColor}`}>
+                      <c.Icon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#9CA3AF]">{c.label}</p>
+                      <p className="text-[20px] font-black text-[#111111]">{c.value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="rounded-xl border border-[#E7CFAA] bg-[#FFF6E7] px-3 py-2 text-[11px] font-bold text-[#B08A1C] shadow-sm">

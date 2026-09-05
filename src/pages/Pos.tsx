@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useSound } from '../context/SoundContext'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { debounce } from '../lib/debounce'
 import { useProductStore, useVariantStore, useAdminAuthStore, type Product } from '../store/store'
 import { Invoice } from '../components/Invoice'
 import CatalogModal from '../components/CatalogModal'
@@ -174,8 +175,12 @@ export default function Pos(props: PosProps = {}) {
         else if (data) setAvailableCoupons(data)
       })
 
+    // Completing a sale updates one product row per line item, which would
+    // otherwise fire a full products re-fetch — and a re-render of the whole
+    // catalogue/cart — once per row while the cashier is mid-checkout.
+    const debouncedFetchProducts = debounce(() => void fetchProducts(), 400)
     const productChannel = supabase.channel('pos-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => void fetchProducts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => debouncedFetchProducts())
       .subscribe()
 
     // Load active categories in sort_order
