@@ -6,6 +6,7 @@ import { BRAND_EN } from './lib/brand'
 import { clearLocalOrders } from './lib/ordersFallback'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { debounce } from './lib/debounce'
+import { ToastProvider } from './components/ui/Toast'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Pos = lazy(() => import('./pages/Pos'))
@@ -103,6 +104,7 @@ function AppShell() {
 
   return (
     <div className="h-dvh w-full max-w-[100vw] overflow-hidden bg-bgMain print:block print:h-auto print:overflow-visible">
+      <ToastProvider>
       <main className="h-full print:block print:overflow-visible">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -169,6 +171,7 @@ function AppShell() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
+      </ToastProvider>
     </div>
   )
 }

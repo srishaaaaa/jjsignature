@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Search, Trash2, Plus, Receipt, Printer,
-  RefreshCw, ShoppingBag, MessageCircle,
+  Search, Trash2, Plus, Receipt, Printer, Minus, User,
+  RefreshCw, ShoppingBag, MessageCircle, CheckCircle2,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Wifi, WifiOff, Layers, X, ChevronDown, Power, LogOut, Volume2, VolumeX
 } from 'lucide-react'
@@ -14,6 +14,13 @@ import { useProductStore, useVariantStore, useAdminAuthStore, type Product } fro
 import { Invoice } from '../components/Invoice'
 import CatalogModal from '../components/CatalogModal'
 import AddProductModal from '../components/AddProductModal'
+import { Button } from '../components/ui/Button'
+import { IconButton } from '../components/ui/IconButton'
+import { Card } from '../components/ui/Card'
+import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
+import { Toggle } from '../components/ui/Toggle'
+import { useToast } from '../components/ui/useToast'
 import { invoicePdfFile } from '../lib/invoicePdf'
 import { uploadInvoicePdf } from '../lib/storage'
 import { createOrderWithStock } from '../services/orderService'
@@ -116,6 +123,7 @@ type PosProps = {
 
 export default function Pos(props: PosProps = {}) {
   const { play } = useSound()
+  const { toast } = useToast()
   const { products, fetchProducts } = useProductStore()
   const { getVariants, fetchVariants } = useVariantStore()
   const l = (en: string, _ta: string) => en
@@ -161,7 +169,6 @@ export default function Pos(props: PosProps = {}) {
   const [depositCreated, setDepositCreated] = useState<AdvanceOrder | null>(null)
   const [depositForm, setDepositForm] = useState({ amount: '', expectedDeliveryDate: '', paymentMethod: 'Cash' as AdvancePaymentMethod, address: '', remarks: '', referenceNumber: '' })
   const [dbCategories, setDbCategories] = useState<string[]>([])
-  const [lowStockAlert, setLowStockAlert] = useState<{ name: string; stock: number }[]>([])
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -594,7 +601,7 @@ export default function Pos(props: PosProps = {}) {
         paymentMethod: paymentMode,
       }
       setInvoice(createdInvoice)
-      // Low stock check — show visual alert banner + sound
+      // Low stock check — toast + sound
       const lowStockItems = items.flatMap(item => {
         const product = products.find(p => p.id.toString() === item.id?.toString())
         if (!product) return []
@@ -606,9 +613,13 @@ export default function Pos(props: PosProps = {}) {
       })
       if (lowStockItems.length > 0) {
         play('alert')          // single alert sound replaces success when stock is low
-        setLowStockAlert(lowStockItems)
+        toast.warning(
+          'Low stock alert',
+          lowStockItems.map(i => `${i.name} — ${i.stock <= 0 ? 'out of stock' : `${i.stock} left`}`).join(', '),
+        )
       } else {
         play('success')        // normal success sound when stock is fine
+        toast.success('Bill generated successfully')
       }
 
       void persistInvoicePdf(createdInvoice)
@@ -721,106 +732,74 @@ export default function Pos(props: PosProps = {}) {
     return (
       <div className="mobile-page-shell print:bg-white print:min-h-0">
 
-        {/* Low Stock Alert Toast — shown on invoice screen after billing */}
-        {lowStockAlert.length > 0 && (
-          <div className="fixed top-4 right-4 z-[9999] max-w-sm w-full">
-            <div className="bg-white border-2 border-orange-400 rounded-2xl shadow-2xl p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="bg-orange-100 p-2 rounded-xl shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-black text-[#111111]">⚠️ Low Stock Alert!</p>
-                    <p className="text-[11px] text-[#6B7280] font-bold mt-0.5">These items need restocking:</p>
-                    <ul className="mt-2 space-y-1">
-                      {lowStockAlert.map((item, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${item.stock <= 0 ? 'bg-red-500' : 'bg-orange-400'}`} />
-                          <span className="text-[12px] font-bold text-[#111111]">{item.name}</span>
-                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${item.stock <= 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                            {item.stock <= 0 ? 'Out of Stock' : `${item.stock} left`}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <button onClick={() => setLowStockAlert([])} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Screen UI */}
         <div className="max-w-2xl mx-auto px-4 py-6 print:hidden space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-textMain">{l('Bill Generated', 'பில் உருவாக்கப்பட்டது')}</h1>
-              <p className="text-sm text-textMuted">#{formatInvoiceNo(invoice.invoiceNo)}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+              <CheckCircle2 size={22} />
             </div>
-            <button onClick={clearAll}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111111] hover:bg-[#3d4f3a] text-white font-bold text-sm">
-              <Plus size={15} /> New Sale
-            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[17px] font-black text-[#111111]">{l('Bill Generated', 'பில் உருவாக்கப்பட்டது')}</h1>
+              <p className="text-[12px] font-bold text-[#6B7280]">#{formatInvoiceNo(invoice.invoiceNo)}</p>
+            </div>
+            <Button variant="secondary" size="sm" iconLeft={<Plus size={14} />} onClick={clearAll}>New Sale</Button>
           </div>
 
           {/* Payment receipt */}
-          <div className="surface-panel p-5 rounded-xl border border-gray-100 bg-white shadow-sm mb-4">
-            <p className="text-xs font-black uppercase tracking-widest text-textMuted mb-3">{l('Payment Receipt', 'பண ரசீது')}</p>
+          <Card padding="md">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280] mb-3">{l('Payment Receipt', 'பண ரசீது')}</p>
             <div className="space-y-2.5">
-              <div className="flex justify-between items-center pb-2.5 border-b border-gray-100">
-                <p className="text-sm font-bold text-textMuted">{l('Grand Total', 'மொத்த தொகை')}</p>
-                <p className="text-2xl font-black text-textMain">{formatCurrency(invoice.total)}</p>
+              <div className="flex justify-between items-center pb-2.5 border-b border-[#FDDBB4]/40">
+                <p className="text-[13px] font-bold text-[#6B7280]">{l('Grand Total', 'மொத்த தொகை')}</p>
+                <p className="text-2xl font-black text-[#111111]">{formatCurrency(invoice.total)}</p>
               </div>
               <div className="flex justify-between items-center">
-                <p className="text-sm font-bold text-textMuted">{l('Amount Received', 'பெற்ற தொகை')}</p>
-                <p className="text-xl font-black text-textMain">{formatCurrency(invoice.amountReceived)}</p>
+                <p className="text-[13px] font-bold text-[#6B7280]">{l('Amount Received', 'பெற்ற தொகை')}</p>
+                <p className="text-xl font-black text-[#111111]">{formatCurrency(invoice.amountReceived)}</p>
               </div>
               {invoice.balanceReturned > 0 ? (
                 <div className="flex justify-between items-center rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-                  <p className="text-sm font-black text-blue-700">{l('Balance Returned', 'திரும்பிய பணம்')}</p>
+                  <p className="text-[13px] font-black text-blue-700">{l('Balance Returned', 'திரும்பிய பணம்')}</p>
                   <p className="text-2xl font-black text-blue-700">{formatCurrency(invoice.balanceReturned)}</p>
                 </div>
               ) : (
-                <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-center">
-                  <p className="text-sm font-black text-green-700">✅ {l('Exact Amount Received', 'சரியான தொகை')}</p>
+                <div className="flex items-center justify-center gap-1.5 rounded-xl bg-green-50 border border-green-200 px-4 py-3">
+                  <CheckCircle2 size={15} className="text-green-600" />
+                  <p className="text-[13px] font-black text-green-700">{l('Exact Amount Received', 'சரியான தொகை')}</p>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Actions */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             <button onClick={() => printReceipt(invoice)}
-              className="flex flex-col md:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl border-2 border-gray-200 hover:border-[#111111] text-textMain font-bold text-[12px] md:text-sm transition-colors text-center leading-tight">
-              <Printer size={16} className="shrink-0" /> {l('Print Receipt', 'ரசீது அச்சிடு')}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#FDDBB4]/60 bg-white py-3 text-[#374151] hover:bg-[#F9FAFB] transition-colors">
+              <Printer size={16} /> <span className="text-[11px] font-black">{l('Print', 'அச்சிடு')}</span>
             </button>
             <button onClick={() => sendPosWhatsApp(invoice)}
-              className="flex flex-col md:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-[12px] md:text-sm transition-colors text-center leading-tight">
-              <MessageCircle size={16} className="shrink-0" /> WhatsApp Invoice
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-green-200 bg-green-50 py-3 text-green-700 hover:bg-green-100 transition-colors">
+              <MessageCircle size={16} /> <span className="text-[11px] font-black">WhatsApp</span>
             </button>
             <button onClick={clearAll}
-              className="flex flex-col md:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl bg-[#111111] hover:bg-[#3d4f3a] text-white font-bold text-[12px] md:text-sm transition-colors text-center leading-tight">
-              <RefreshCw size={16} className="shrink-0" /> New Sale
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#D9A62E] bg-[#141414] py-3 text-[#D9A62E] hover:bg-black transition-colors">
+              <RefreshCw size={16} /> <span className="text-[11px] font-black">New Sale</span>
             </button>
           </div>
 
           {/* Items summary */}
-          <div className="surface-panel p-4 rounded-xl border border-gray-100 bg-white shadow-sm mt-4">
-            <p className="text-xs font-bold text-textMuted uppercase tracking-wide mb-3">{l('Items Sold', 'விற்ற பொருட்கள்')}</p>
+          <Card padding="md">
+            <p className="text-[10px] font-black uppercase tracking-wide text-[#6B7280] mb-3">{l('Items Sold', 'விற்ற பொருட்கள்')}</p>
             <div className="space-y-1.5">
               {invoice.items.map(item => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-textMain">{item.name} × {formatQuantityDisplay(item.qty, item.selectedUnit, item.unitType)}</span>
-                  <span className="font-bold">{formatCurrency(item.lineTotal)}</span>
+                <div key={item.id} className="flex justify-between text-[13px]">
+                  <span className="text-[#111111] font-medium">{item.name} × {formatQuantityDisplay(item.qty, item.selectedUnit, item.unitType)}</span>
+                  <span className="font-bold text-[#111111]">{formatCurrency(item.lineTotal)}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Print view — full A4 invoice */}
@@ -850,39 +829,6 @@ export default function Pos(props: PosProps = {}) {
   return (
     <div data-embedded={embeddedMode} data-panel={mobilePanelView} className="flex flex-col h-full bg-[#FAFAFA] print:hidden overflow-y-auto overflow-x-hidden hide-scrollbar">
 
-      {/* Low Stock Alert Toast */}
-      {lowStockAlert.length > 0 && (
-        <div className="fixed top-4 right-4 z-[9999] max-w-sm w-full animate-in slide-in-from-top-2">
-          <div className="bg-white border-2 border-orange-400 rounded-2xl shadow-2xl p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="bg-orange-100 p-2 rounded-xl shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                </div>
-                <div>
-                  <p className="text-[13px] font-black text-[#111111]">⚠️ Low Stock Alert!</p>
-                  <p className="text-[11px] text-[#6B7280] font-bold mt-0.5">The following items need restocking:</p>
-                  <ul className="mt-2 space-y-1">
-                    {lowStockAlert.map((item, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${item.stock <= 0 ? 'bg-red-500' : 'bg-orange-400'}`} />
-                        <span className="text-[12px] font-bold text-[#111111]">{item.name}</span>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${item.stock <= 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                          {item.stock <= 0 ? 'Out of Stock' : `${item.stock} left`}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <button onClick={() => setLowStockAlert([])} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="px-4 pt-4 pb-3 md:px-6 md:pt-6 md:pb-4 shrink-0 flex flex-col gap-4 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between">
         <div className="min-w-0">
@@ -898,32 +844,27 @@ export default function Pos(props: PosProps = {}) {
           <div className="grid grid-cols-2 bg-white rounded-xl border border-[#FDDBB4]/60 p-1 shadow-sm flex-1 min-[480px]:flex-none">
             <button
               onClick={() => setOrdermode('offline')}
-              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'offline' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
+              className={`h-9 px-4 rounded-lg text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'offline' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
             >
               Offline
             </button>
             <button
               onClick={() => setOrdermode('online')}
-              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'online' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
+              className={`h-9 px-4 rounded-lg text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'online' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
             >
               Online
             </button>
           </div>
           {!embeddedMode && (
             <>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center justify-center min-h-[44px] px-4 rounded-xl bg-[#111111] text-white hover:bg-[#3d4f3a] transition-colors text-[12px] font-black tracking-wider uppercase"
-              >
-                Dashboard
-              </button>
-              <button
+              <Button variant="secondary" size="md" onClick={() => navigate('/dashboard')}>Dashboard</Button>
+              <IconButton
+                variant="danger"
+                size="lg"
+                icon={<Power size={18} />}
+                label="Logout"
                 onClick={() => { logout(); navigate('/admin-login', { replace: true }) }}
-                title="Logout"
-                className="flex items-center justify-center min-h-[44px] px-4 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-              >
-                <Power size={18} />
-              </button>
+              />
             </>
           )}
         </div>
@@ -936,127 +877,95 @@ export default function Pos(props: PosProps = {}) {
         <div className="flex-[2.1] flex flex-col gap-6 lg:overflow-y-auto lg:pb-4 hide-scrollbar">
 
           {/* Customer Details Card */}
-          <div className="bg-white rounded-2xl border border-[#FDDBB4]/40 shadow-sm p-4 md:p-5">
-            <h3 className="text-[18px] md:text-[14px] font-black text-[#111111] flex items-center gap-2 mb-4">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#B08A1C]"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <Card padding="md">
+            <h3 className="text-[14px] font-black text-[#111111] flex items-center gap-2 mb-4">
+              <User size={16} className="text-[#B08A1C]" />
               Customer Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Customer Name</label>
-                <input
+                <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Customer Name</label>
+                <Input
                   type="text"
                   value={customer.name}
                   onChange={e => setCustomer({...customer, name: e.target.value})}
                   placeholder="Enter name"
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111] placeholder:text-gray-400 placeholder:font-medium"
                 />
               </div>
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Mobile Number (WhatsApp)</label>
-                <input
+                <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Mobile Number (WhatsApp)</label>
+                <Input
                   type="text"
                   value={customer.phone}
                   onChange={e => setCustomer({...customer, phone: e.target.value})}
                   placeholder="Enter WhatsApp number"
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111] placeholder:text-gray-400 placeholder:font-medium"
                 />
               </div>
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Remarks (Internal)</label>
-                <input
+                <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Remarks (Internal)</label>
+                <Input
                   type="text"
                   value={remarks}
                   onChange={e => setRemarks(e.target.value)}
                   placeholder="Optional remarks"
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111] placeholder:text-gray-400 placeholder:font-medium"
                 />
               </div>
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Reference Number</label>
-                <input
+                <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Reference Number</label>
+                <Input
                   type="text"
                   value={referenceNumber}
                   onChange={e => setReferenceNumber(e.target.value)}
                   placeholder="Optional ref no."
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111] placeholder:text-gray-400 placeholder:font-medium"
                 />
               </div>
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Billing Date (Optional)</label>
-                <input
+                <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Billing Date (Optional)</label>
+                <Input
                   id="pos-billing-date"
                   type="date"
                   value={billingDate}
                   onChange={e => setBillingDate(e.target.value)}
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111]"
                 />
                 <p className="mt-1 text-[10px] text-gray-400 font-medium">Leave blank to use today's date &amp; time</p>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Order Items Card */}
-          <div className="bg-white rounded-2xl border border-[#FDDBB4]/40 shadow-sm flex-1 flex flex-col min-h-[400px]">
+          <Card padding="none" className="flex-1 flex flex-col min-h-[400px]">
             {/* Card Header */}
             <div className="flex flex-col gap-4 p-4 md:p-5 border-b border-[#FDDBB4]/40">
-              <h3 className="text-[18px] md:text-[14px] font-black text-[#111111] flex items-center gap-2">
+              <h3 className="text-[14px] font-black text-[#111111] flex items-center gap-2">
                 <Receipt size={16} className="text-[#B08A1C]" />
                 Order Items
               </h3>
               <div className="grid grid-cols-2 md:flex md:items-stretch gap-2">
-                <button
-                  onClick={clearAll}
-                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg border border-[#FDDBB4]/60 text-[12px] md:text-[11px] font-black text-[#374151] hover:bg-[#F9FAFB] transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
-                >
-                  <Trash2 size={12} /> CLEAR ORDER
-                </button>
-                <button
-                  onClick={() => setCatalogOpen(true)}
-                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg border border-[#B08A1C] text-[#B08A1C] text-[12px] md:text-[11px] font-black hover:bg-[#B08A1C]/5 transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
-                >
-                  <Search size={12} /> SEARCH CATALOG
-                </button>
-                <button
-                  onClick={() => setAddProductOpen(true)}
-                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg bg-[#141414] border border-[#D9A62E] text-[#D9A62E] text-[12px] md:text-[11px] font-black hover:bg-black transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
-                >
-                  <Plus size={12} /> ADD TO CATALOG
-                </button>
-                <button
-                  onClick={() => setCustomItemOpen(open => !open)}
-                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg border border-[#B08A1C] text-[#B08A1C] text-[12px] md:text-[11px] font-black hover:bg-[#B08A1C]/5 transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
-                >
-                  + ADD CUSTOM ITEM
-                </button>
+                <Button variant="secondary" size="sm" iconLeft={<Trash2 size={13} />} onClick={clearAll} className="md:flex-1">Clear Order</Button>
+                <Button variant="secondary" size="sm" iconLeft={<Search size={13} />} onClick={() => setCatalogOpen(true)} className="md:flex-1">Search Catalog</Button>
+                <Button variant="primary" size="sm" iconLeft={<Plus size={13} />} onClick={() => setAddProductOpen(true)} className="md:flex-1">Add to Catalog</Button>
+                <Button variant="secondary" size="sm" iconLeft={<Plus size={13} />} onClick={() => setCustomItemOpen(open => !open)} className="md:flex-1">Custom Item</Button>
               </div>
               {customItemOpen && (
                 <form
                   onSubmit={e => { e.preventDefault(); addManualItem() }}
                   className="mt-3 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_150px_auto] gap-2 rounded-xl border border-[#FDDBB4]/60 bg-[#FFFDFC] p-3"
                 >
-                  <input
+                  <Input
                     autoFocus
                     required
                     value={manualName}
                     onChange={e => setManualName(e.target.value)}
                     placeholder="Product name"
-                    className="h-10 rounded-lg border border-[#FDDBB4]/70 bg-white px-3 text-[12px] font-bold text-[#111111] outline-none focus:border-[#B08A1C]"
                   />
-                  <input
+                  <Input
                     step="0.01"
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     value={manualPrice}
                     onChange={e => setManualPrice(e.target.value)}
                     placeholder="Price (₹, optional)"
-                    className="h-10 rounded-lg border border-[#FDDBB4]/70 bg-white px-3 text-[12px] font-bold text-[#111111] outline-none focus:border-[#B08A1C]"
                   />
-                  <button
-                    type="submit"
-                    className="h-10 rounded-lg bg-[#B08A1C] px-4 text-[11px] font-black text-white hover:bg-[#7A5F17]"
-                  >
-                    ADD ITEM
-                  </button>
+                  <Button type="submit" variant="primary" size="sm">Add Item</Button>
                 </form>
               )}
             </div>
@@ -1098,13 +1007,14 @@ export default function Pos(props: PosProps = {}) {
                           </div>
                         )}
                       </div>
-                      <button
+                      <IconButton
+                        variant="secondary"
+                        size="lg"
+                        icon={<Trash2 size={16} />}
+                        label={`Delete ${item.name}`}
                         onClick={() => removeItem(item.id)}
-                        className="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
-                        aria-label={`Delete ${item.name}`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        className="hover:!bg-red-50 hover:!text-red-500 hover:!border-red-200"
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -1132,16 +1042,10 @@ export default function Pos(props: PosProps = {}) {
 
                     <div>
                       <p className="text-[13px] font-black uppercase tracking-wider text-[#374151] mb-1">Quantity</p>
-                      <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2 border border-[#FDDBB4]/60 rounded-xl px-2 py-2 bg-white">
-                        <button
-                          onClick={() => bumpQty(item.id, -1)}
-                          className="w-11 h-11 rounded-xl hover:bg-[#FAFAFA] flex items-center justify-center text-[#374151] font-bold text-[20px]"
-                        >-</button>
-                        <span className="text-[18px] font-black text-[#111111] text-center">{item.qty}</span>
-                        <button
-                          onClick={() => bumpQty(item.id, 1)}
-                          className="w-11 h-11 rounded-xl hover:bg-[#FAFAFA] flex items-center justify-center text-[#374151] font-bold text-[20px]"
-                        >+</button>
+                      <div className="flex items-center justify-between gap-2 border border-[#FDDBB4]/60 rounded-xl px-2 py-1.5 bg-white">
+                        <IconButton variant="ghost" size="lg" icon={<Minus size={16} />} label="Decrease quantity" onClick={() => bumpQty(item.id, -1)} />
+                        <span className="text-[16px] font-black text-[#111111] text-center">{item.qty}</span>
+                        <IconButton variant="ghost" size="lg" icon={<Plus size={16} />} label="Increase quantity" onClick={() => bumpQty(item.id, 1)} />
                       </div>
                     </div>
                   </div>
@@ -1185,30 +1089,26 @@ export default function Pos(props: PosProps = {}) {
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center justify-between border border-[#FDDBB4]/60 rounded-lg px-2 py-1 bg-white">
-                      <button
-                        onClick={() => bumpQty(item.id, -1)}
-                        className="w-6 h-6 rounded-md hover:bg-[#FAFAFA] flex items-center justify-center text-[#374151] font-bold"
-                      >-</button>
+                    <div className="flex items-center justify-between border border-[#FDDBB4]/60 rounded-lg px-1 py-0.5 bg-white">
+                      <IconButton variant="ghost" size="sm" className="h-6 w-6" icon={<Minus size={12} />} label="Decrease quantity" onClick={() => bumpQty(item.id, -1)} />
                       <span className="text-[13px] font-black text-[#111111] min-w-[20px] text-center">{item.qty}</span>
-                      <button
-                        onClick={() => bumpQty(item.id, 1)}
-                        className="w-6 h-6 rounded-md hover:bg-[#FAFAFA] flex items-center justify-center text-[#374151] font-bold"
-                      >+</button>
+                      <IconButton variant="ghost" size="sm" className="h-6 w-6" icon={<Plus size={12} />} label="Increase quantity" onClick={() => bumpQty(item.id, 1)} />
                     </div>
 
                     {/* Delete */}
-                    <button
+                    <IconButton
+                      variant="secondary"
+                      size="md"
+                      icon={<Trash2 size={14} />}
+                      label={`Delete ${item.name}`}
                       onClick={() => removeItem(item.id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#FDDBB4]/60 text-[#374151] hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                      className="hover:!bg-red-50 hover:!text-red-500 hover:!border-red-200"
+                    />
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* RIGHT COLUMN (approx 32%) */}
@@ -1236,29 +1136,16 @@ export default function Pos(props: PosProps = {}) {
                   <span className="text-[#374151] uppercase">Source</span>
                   <span className="text-[#B08A1C] border border-[#B08A1C]/30 bg-[#B08A1C]/5 px-1.5 rounded uppercase">{ordermode.toUpperCase()}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-0 border-b border-[#FDDBB4]/40">
-                  <div className="p-2 border-r border-[#FDDBB4]/40">
-                    <span className="text-[10px] text-[#374151] uppercase block mb-0.5">Customer Name</span>
-                    <input
-                      type="text"
-                      value={customer.name}
-                      onChange={e => setCustomer({...customer, name: e.target.value})}
-                      placeholder="Enter name"
-                      className="w-full h-8 px-2 bg-white border border-[#FDDBB4]/60 rounded-lg text-[12px] font-bold text-[#111111] focus:outline-none focus:border-[#B08A1C]"
-                    />
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[#FDDBB4]/40">
+                  <div className="min-w-0 flex items-center gap-1.5 text-[#111111]">
+                    <User size={12} className="shrink-0 text-[#B08A1C]" />
+                    <span className="truncate">{customer.name || 'Walk-in Customer'}</span>
                   </div>
-                  <div className="p-2">
-                    <span className="text-[10px] text-[#374151] uppercase block mb-0.5">WhatsApp Number</span>
-                    <input
-                      type="text"
-                      value={customer.phone}
-                      onChange={e => setCustomer({...customer, phone: e.target.value})}
-                      placeholder="Enter WhatsApp number"
-                      className={`w-full h-8 px-2 bg-white border rounded-lg text-[12px] font-bold text-[#111111] focus:outline-none ${customer.phone && !normalizePhone(customer.phone) ? 'border-red-400 bg-red-50' : 'border-[#FDDBB4]/60 focus:border-[#B08A1C]'}`}
-                    />
-                  </div>
+                  <span className={customer.phone && !normalizePhone(customer.phone) ? 'text-red-500' : 'text-[#6B7280]'}>
+                    {customer.phone || 'No phone'}
+                  </span>
                 </div>
-{items.length > 0 && (
+                {items.length > 0 && (
                   <div className="px-3 py-2 bg-[#FAFAFA] space-y-1 border-b border-[#FDDBB4]/40 max-h-[80px] overflow-y-auto">
                     {items.map(item => (
                 <div key={item.id} className="flex justify-between gap-2 text-[#111111] text-[11px]">
@@ -1274,8 +1161,9 @@ export default function Pos(props: PosProps = {}) {
               <div>
                 <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1">Coupon Code</label>
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="text"
+                    size="sm"
                     value={couponInput}
                     onChange={e => {
                       const val = e.target.value.toUpperCase()
@@ -1287,7 +1175,7 @@ export default function Pos(props: PosProps = {}) {
                     placeholder="Enter code"
                     disabled={appliedCoupon !== null}
                     list="pos-coupons"
-                    className="w-full h-9 px-3 bg-white border border-[#FDDBB4]/60 rounded-xl text-[12px] font-bold text-[#111111] focus:outline-none focus:border-[#B08A1C] uppercase disabled:bg-gray-100"
+                    className="uppercase"
                   />
                   <datalist id="pos-coupons">
                     {availableCoupons.map(c => (
@@ -1295,20 +1183,9 @@ export default function Pos(props: PosProps = {}) {
                     ))}
                   </datalist>
                   {appliedCoupon ? (
-                    <button
-                      onClick={removeCoupon}
-                      className="h-9 px-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl text-[11px] font-black transition-colors shrink-0"
-                    >
-                      Remove
-                    </button>
+                    <Button variant="danger" size="sm" onClick={removeCoupon}>Remove</Button>
                   ) : (
-                    <button
-                      onClick={() => void applyCoupon()}
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="h-9 px-3 bg-[#374151] text-white hover:bg-[#111111] rounded-xl text-[11px] font-black transition-colors disabled:opacity-50 shrink-0"
-                    >
-                      Apply
-                    </button>
+                    <Button variant="secondary" size="sm" onClick={() => void applyCoupon()} disabled={couponLoading || !couponInput.trim()}>Apply</Button>
                   )}
                 </div>
                 {couponError && <p className="text-[10px] font-bold text-red-500 mt-0.5">{couponError}</p>}
@@ -1321,58 +1198,49 @@ export default function Pos(props: PosProps = {}) {
               <div>
                 <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1">Manual Discount</label>
                 <div className="flex gap-2">
-                  <div className="relative shrink-0">
-                    <select
-                      value={manualDiscountType}
-                      onChange={e => setManualDiscountType(e.target.value as 'flat'|'percent')}
-                      className="appearance-none h-9 bg-white border border-[#FDDBB4]/60 rounded-xl pl-2 pr-7 text-[12px] font-black text-[#111111] focus:outline-none focus:border-[#B08A1C]"
-                    >
-                      <option value="flat">₹</option>
-                      <option value="percent">%</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#374151] pointer-events-none" />
-                  </div>
-                  <input
+                  <Select
+                    size="sm"
+                    value={manualDiscountType}
+                    onChange={e => setManualDiscountType(e.target.value as 'flat'|'percent')}
+                    className="w-16 shrink-0"
+                  >
+                    <option value="flat">₹</option>
+                    <option value="percent">%</option>
+                  </Select>
+                  <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    size="sm"
                     value={manualDiscountValue}
                     onChange={e => setManualDiscountValue(e.target.value)}
                     placeholder="0"
-                    className="w-full h-9 px-3 bg-white border border-[#FDDBB4]/60 rounded-xl text-[12px] font-black text-[#111111] text-right focus:outline-none focus:border-[#B08A1C]"
+                    className="text-right"
                   />
                 </div>
               </div>
 
               {/* GST Toggle */}
-              <div className="flex items-center justify-between py-1 border-b border-[#FDDBB4]/40">
-                <span className="text-[11px] font-black text-[#374151]">Enable GST on Bill</span>
-                <button
-                  type="button"
-                  onClick={() => setBillGstEnabled(!billGstEnabled)}
-                  className={`w-9 h-5 rounded-full p-0.5 transition-colors ${billGstEnabled ? 'bg-[#B08A1C]' : 'bg-[#FDDBB4]/60'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full bg-white transition-transform ${billGstEnabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
-                </button>
+              <div className="py-1 border-b border-[#FDDBB4]/40">
+                <Toggle checked={billGstEnabled} onChange={setBillGstEnabled} label="Enable GST on Bill" />
               </div>
 
               {billGstEnabled && (
                 <div className="flex gap-2">
-                  <div className="relative shrink-0">
-                    <select
-                      value={gstType}
-                      onChange={e => setGstType(e.target.value as 'flat'|'percent')}
-                      className="appearance-none h-9 bg-white border border-[#FDDBB4]/60 rounded-xl pl-2 pr-7 text-[12px] font-black text-[#111111] focus:outline-none focus:border-[#B08A1C]"
-                    >
-                      <option value="percent">%</option>
-                      <option value="flat">₹</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#374151] pointer-events-none" />
-                  </div>
-                  <input
+                  <Select
+                    size="sm"
+                    value={gstType}
+                    onChange={e => setGstType(e.target.value as 'flat'|'percent')}
+                    className="w-16 shrink-0"
+                  >
+                    <option value="percent">%</option>
+                    <option value="flat">₹</option>
+                  </Select>
+                  <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    size="sm"
                     value={gstInput}
                     onChange={e => setGstInput(e.target.value)}
                     placeholder={gstType === 'percent' ? "e.g. 6" : "0"}
-                    className="w-full h-9 px-3 bg-white border border-[#FDDBB4]/60 rounded-xl text-[12px] font-black text-[#111111] text-right focus:outline-none focus:border-[#B08A1C]"
+                    className="text-right"
                   />
                 </div>
               )}
@@ -1393,11 +1261,12 @@ export default function Pos(props: PosProps = {}) {
 
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-black text-[#374151]">Delivery</span>
-                  <input
+                  <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    size="sm"
                     value={shipping}
                     onChange={e => setShipping(e.target.value)}
-                    className="w-20 h-8 px-2 bg-white border border-[#FDDBB4]/60 rounded-lg text-[12px] font-black text-[#111111] text-right focus:outline-none focus:border-[#B08A1C]"
+                    className="w-20 text-right"
                   />
                 </div>
 
@@ -1406,25 +1275,22 @@ export default function Pos(props: PosProps = {}) {
                 {/* Grand Total */}
                 <div className="flex items-center justify-between pt-0.5">
                   <span className="text-[12px] font-black text-[#111111] uppercase tracking-wider">Grand Total</span>
-                  <span className="text-[20px] font-black text-[#B08A1C] tracking-tight">{formatCurrency(total)}</span>
+                  <span className="text-2xl font-black text-[#B08A1C] tracking-tight">{formatCurrency(total)}</span>
                 </div>
               </div>
 
               {/* Payment Mode Selector */}
               <div>
                 <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1">Payment Mode</label>
-                <div className="relative">
-                  <select
-                    value={paymentType}
-                    onChange={e => setPaymentType(e.target.value)}
-                    className="w-full h-11 appearance-none px-3 pr-8 bg-white border-2 border-[#FDDBB4]/60 rounded-xl text-[12px] font-black uppercase tracking-wide text-[#374151] focus:outline-none focus:border-[#B08A1C]"
-                  >
-                    {BILLING_PAYMENT_METHODS.map(mode => (
-                      <option key={mode} value={mode}>{mode}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] pointer-events-none" />
-                </div>
+                <Select
+                  value={paymentType}
+                  onChange={e => setPaymentType(e.target.value)}
+                  className="uppercase tracking-wide"
+                >
+                  {BILLING_PAYMENT_METHODS.map(mode => (
+                    <option key={mode} value={mode}>{mode}</option>
+                  ))}
+                </Select>
               </div>
 
               {/* Amount Received (shown for all payment modes) */}
@@ -1434,12 +1300,13 @@ export default function Pos(props: PosProps = {}) {
                   <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-0.5">
                     {paymentType} — Amount Received (₹)
                   </label>
-                  <input
+                  <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    size="sm"
                     value={cashReceived}
                     onChange={e => setCashReceived(e.target.value)}
                     placeholder="0.00"
-                    className="w-full h-9 px-3 bg-[#FAFAFA] border border-[#FDDBB4]/40 rounded-xl text-[13px] font-black text-[#111111] focus:outline-none focus:border-[#B08A1C]"
+                    className="bg-[#FAFAFA]"
                   />
                   {cashReceivedNum > 0 && (
                     <div className="mt-2 flex justify-between items-center bg-[#F9FAFB] px-3 py-1.5 rounded-lg border border-[#FDDBB4]/40">
@@ -1461,22 +1328,23 @@ export default function Pos(props: PosProps = {}) {
             {/* Action Buttons Fixed Footer */}
             <div className="shrink-0 border-t border-[#FDDBB4]/60 bg-white p-3 shadow-[0_-8px_20px_rgba(44,57,42,0.06)]">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={openDepositOrder}
                   disabled={saving || items.length === 0}
-                  className="min-h-[44px] rounded-xl border-2 border-violet-600 bg-violet-50 px-3 py-3 text-[12px] font-black uppercase tracking-wide text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-40"
+                  className="!border-violet-600 !bg-violet-50 !text-violet-700 hover:!bg-violet-100"
                 >
                   Save as Deposit Order
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="primary"
                   onClick={generateBill}
-                  disabled={saving}
-                  className="min-h-[44px] rounded-xl bg-[#4CAF50] px-3 py-3 text-[13px] font-black uppercase tracking-wider text-white transition-colors hover:bg-[#45a049] disabled:opacity-50"
+                  loading={saving}
                 >
-                  {saving ? 'Processing...' : 'Complete Sale'}
-                </button>
+                  Complete Sale
+                </Button>
               </div>
               <p className="mt-2 text-center text-[10px] font-bold text-[#6B7280]">Deposit orders do not count as revenue until the remaining payment is received.</p>
             </div>
