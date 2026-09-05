@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState, useMemo, useRef, type FormEvent } from 'react'
 import {
   BarChart2, Trash2, Edit2, List, ShoppingCart, LayoutDashboard,
-  Box, Receipt, AlertCircle, ArrowUp, ArrowDown, Power, Download, TrendingUp,
+  Box, Receipt, AlertCircle, Power, Download, TrendingUp,
   Package, Search, RefreshCw, ShieldCheck, ShieldOff, Trophy,
-  MessageCircle, ChevronDown, Eye, FileText, Printer, MoreVertical, X, Users, AlertTriangle,
+  MessageCircle, ChevronDown, Eye, FileText, Printer, X, Users, AlertTriangle,
 } from 'lucide-react'
 
 // Custom Indian Rupee icon — replaces the generic dollar-sign icon
@@ -36,9 +36,8 @@ const RMIcon = ({ size = 16, className = '' }: { size?: number; className?: stri
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { debounce } from '../lib/debounce'
-import { useAuthStore, useProductStore, useAdminAuthStore, type Product } from '../store/store'
-import { uploadProductImage } from '../lib/storage'
-import { formatCurrency, normalizeOrderMode, normalizeUnitType, toNumber, type UnitType } from '../lib/retail'
+import { useAuthStore, useProductStore, useAdminAuthStore } from '../store/store'
+import { formatCurrency, normalizeOrderMode, toNumber } from '../lib/retail'
 import { normalizeStructuredOrderItem, formatInvoiceNo } from '../lib/retail'
 import { formatPhoneDisplay } from '../lib/phone'
 import { Invoice } from '../components/Invoice'
@@ -50,11 +49,8 @@ import { printThermalReceipt } from '../lib/thermalPrint'
 import { buildProfessionalWhatsAppMessage } from '../lib/whatsappMessage'
 import { invoicePdfFile } from '../lib/invoicePdf'
 // toWhatsAppUrl removed - using direct link building in handlers
-import { createVariant, updateVariant, deleteVariant, setDefaultVariant, type ProductVariant } from '../services/variantService'
-import { useVariantStore } from '../store/store'
 import Pos from './Pos'
 import AdvanceOrders from './AdvanceOrders'
-import type { AdvanceOrder } from '../services/advanceOrderService'
 import {
   ResponsiveContainer,
   XAxis,
@@ -66,7 +62,6 @@ import {
   Bar,
 } from 'recharts'
 
-type Category = { id: string | number; name_en: string; name_ta: string; is_active?: boolean; sort_order?: number }
 type DashboardOrder = {
   id: string; invoice_no: string; customer_name: string; phone: string; address: string
   created_at: string; total: number; status: string; order_mode: string; order_type: string; user_id: string | null; items: unknown
@@ -118,18 +113,6 @@ const getOrderTotal = (order: { total: unknown; items: unknown; shipping?: unkno
   )
 }
 
-const emptyForm = {
-  name: '', nameTa: '', category: '', categoryId: null as string | number | null,
-  remedy: [] as string[], price: 0, offerPrice: '' as string | number,
-  purchasePrice: '' as string | number, mrp: '' as string | number,
-  sku: '', barcode: '',
-  unitType: 'unit' as UnitType, unitLabel: 'piece', baseQuantity: 1,
-  stockQuantity: 100, stockUnit: 'piece', allowDecimalQuantity: false,
-  predefinedOptionsText: '', isActive: true, sortOrder: 0, stock: 100,
-  description: '', descriptionTa: '', benefits: '', benefitsTa: '', image: '',
-  hasVariants: false,
-}
-
 // Excel auto-parses plain digits/dates in a CSV as numbers/dates (scientific
 // notation for long phone numbers, reformatted dates), no matter how wide the
 // column is. Wrapping a field as ="..." forces Excel to import it as literal
@@ -153,20 +136,6 @@ const exportCSV = (orders: DashboardOrder[]) => {
   URL.revokeObjectURL(url)
 }
 
-const UNIT_TYPE_OPTIONS: { value: UnitType; label: string; hint: string }[] = [
-  { value: 'unit',   label: 'Unit (piece)',    hint: 'e.g. Blouse, kurta, gown' },
-  { value: 'weight', label: 'Weight (g / kg)', hint: 'For weight-based boutique items' },
-  { value: 'volume', label: 'Volume (ml / L)', hint: 'e.g. Liquid or bottled products' },
-  { value: 'bundle', label: 'Bundle / Set',    hint: 'e.g. Fabric set, Gift box' },
-]
-
-const DEFAULT_OPTIONS_FOR_TYPE: Record<UnitType, string> = {
-  unit:   '',
-  weight: '100g, 250g, 500g, 1kg',
-  volume: '250ml, 500ml, 1L',
-  bundle: '',
-}
-
 export default function Dashboard() {
   const { user } = useAuthStore()
   const { products, fetchProducts } = useProductStore()
@@ -180,34 +149,14 @@ export default function Dashboard() {
     return 'billing'
   })
   const [posAnalyticsTab, setPosAnalyticsTab] = useState<PosAnalyticsTab>('revenue')
-  const [inventorySearch, setInventorySearch] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [imageUploading, setImageUploading] = useState(false)
-  const [productNotice, setProductNotice] = useState('')
-  const [cats, setCats]     = useState<Category[]>([])
   const [orders, setOrders] = useState<DashboardOrder[]>([])
   const [orderItems, setOrderItems] = useState<DashboardOrderItem[]>([])
-  const [editingProd, setEditingProd] = useState<Product | null>(null)
-  const [prodForm, setProdForm] = useState(emptyForm)
-  const [newCat, setNewCat] = useState({ name_en: '', name_ta: '' })
-  const [editingCategoryId, setEditingCategoryId] = useState<string | number | null>(null)
-  const [categoryNotice, setCategoryNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
-  const [openCategoryMenuId, setOpenCategoryMenuId] = useState<string | number | null>(null)
   const [coupons, setCoupons] = useState<DashboardCoupon[]>([])
-  const [advanceOrders, setAdvanceOrders] = useState<any[]>([])
-  const [expensesList, setExpensesList] = useState<any[]>([])
+  const [expensesList, setExpensesList] = useState<{ amount: number }[]>([])
   const [couponForm, setCouponForm] = useState({ code: '', percentage: 10, expiry_date: '', usage_limit: '', min_order_value: '' })
   const [couponSaveError, setCouponSaveError] = useState('')
   const [couponSaveSuccess, setCouponSaveSuccess] = useState('')
   const [editingCouponId, setEditingCouponId] = useState<number | null>(null)
-
-  // Variant management state
-  const { getVariants, refetchVariants } = useVariantStore()
-  const [variantForm, setVariantForm] = useState({ name: '', sizeLabel: '', price: '', purchasePrice: '', mrp: '', sku: '', barcode: '', stock: '50', weightValue: '', weightUnit: '', isDefault: false })
-  const [editingVariantId, setEditingVariantId] = useState<string | null>(null)
-  const [variantNotice, setVariantNotice] = useState('')
-  const [variantLoading, setVariantLoading] = useState(false)
 
   const [analyticsTab, setAnalyticsTab] = useState('revenue')
 
@@ -234,13 +183,6 @@ export default function Dashboard() {
     }
   })
 
-  // Categories are a master list. Products reference this list through
-  // category_id; product text is only a legacy display fallback.
-  const activeCategories = useMemo(
-    () => cats.filter(category => category.is_active !== false),
-    [cats]
-  )
-
   // Analytics global date filter
   const [analyticsDatePreset, setAnalyticsDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'year' | 'custom'>('all')
   const [analyticsDateFrom, setAnalyticsDateFrom] = useState('')
@@ -258,10 +200,6 @@ export default function Dashboard() {
 
   const isAdmin = true // bypassed for local demo
   const l = (en: string, _ta?: string) => en
-
-  const toErr = (err: unknown, fb: string) =>
-    err instanceof Error ? err.message
-    : (err && typeof err === 'object' && 'message' in err) ? String((err as {message?:unknown}).message) || fb : fb
 
   const handleTabClick = (tabKey: TabKey) => {
     setTab(tabKey)
@@ -289,47 +227,6 @@ export default function Dashboard() {
     remarks: row.remarks ? String(row.remarks) : undefined,
     reference_number: row.reference_number ? String(row.reference_number) : undefined,
   })
-
-  const handleAdvanceOrderCompleted = useCallback((advance: AdvanceOrder) => {
-    if (!advance.completed_order_id || !advance.invoice_number) return
-    const createdAt = advance.completed_at || new Date().toISOString()
-    const fallbackItem = {
-      name: advance.product_name,
-      category: advance.category,
-      quantity: 1,
-      base_price: advance.total_amount,
-      line_total: advance.total_amount,
-      unit: 'piece',
-      unit_type: 'unit',
-      source: 'advance_order',
-    }
-    const completedItems = advance.products.length ? advance.products : [fallbackItem]
-    const completed: DashboardOrder = {
-      id: advance.completed_order_id,
-      invoice_no: advance.invoice_number,
-      customer_name: advance.customer_name,
-      phone: advance.phone,
-      address: advance.address,
-      created_at: createdAt,
-      total: advance.total_amount,
-      status: 'completed',
-      order_mode: 'offline',
-      order_type: 'advance_order',
-      user_id: user?.id || null,
-      items: completedItems,
-      coupon_code: '',
-      discount_amount: 0,
-      manual_discount_amount: 0,
-      delivery_charge: 0,
-      total_gst: 0,
-      payment_mode: advance.final_payment_method || '',
-      payment_method: advance.final_payment_method || '',
-      invoice_pdf_url: '',
-    }
-    setOrders(current => [completed, ...current.filter(order => order.id !== completed.id)])
-    setSearchResults(current => [completed, ...current.filter(order => order.id !== completed.id)].slice(0, 100))
-    setOrderItems(current => [...completedItems.map(item => ({ order_id: completed.id, product_name: String(item.name || 'Product'), category: String(item.category || advance.category || ''), quantity: Number(item.quantity || 1), line_total: Number(item.line_total || 0), is_manual: false })), ...current.filter(row => row.order_id !== completed.id)])
-  }, [user?.id])
 
   // Analytics (date-aware)
   const lowStockProducts = products.filter(p => p.isActive && p.stockQuantity <= (p.lowStockAlert || 5))
@@ -719,7 +616,6 @@ export default function Dashboard() {
   // Load dashboard data
   const loadData = useCallback(async () => {
     if (!isSupabaseConfigured) return
-    setLoading(true)
     try {
       const productsPromise = fetchProducts(true)
       const [cRes, oRes, couponRes, eRes] = await Promise.all([
@@ -733,18 +629,17 @@ export default function Dashboard() {
           .order('created_at', { ascending: false }),
         (async () => {
           const res = await supabase.from('expenses').select('amount')
-          if (res.error) return { data: [] as any[], error: null }
+          if (res.error) return { data: [] as { amount: number }[], error: null }
           return res
         })()
       ])
       if (cRes.error) throw cRes.error
       if (oRes.error) throw oRes.error
-      const mappedOrders = (oRes.data || []).map((r: any) => toDashboardOrder(r as Record<string, unknown>))
-      setCats((cRes.data || []) as Category[])
+      const mappedOrders = (oRes.data || []).map((r: Record<string, unknown>) => toDashboardOrder(r))
       setOrders(mappedOrders)
       setSearchResults(mappedOrders.filter((o: DashboardOrder) => normalizeOrderType(o.order_type) !== 'online_request').slice(0, 100))
       setCoupons((couponRes.data || []) as DashboardCoupon[])
-      setExpensesList((eRes.data || []) as any[])
+      setExpensesList((eRes.data || []) as { amount: number }[])
 
       const orderIds = mappedOrders.map((o: DashboardOrder) => o.id).filter(Boolean)
       if (orderIds.length > 0) {
@@ -775,7 +670,6 @@ export default function Dashboard() {
 
       await productsPromise
     } catch (err) { console.error('Dashboard load error', err) }
-    finally { setLoading(false) }
   }, [fetchProducts])
 
   const loadUsers = useCallback(async () => {
@@ -1194,275 +1088,6 @@ export default function Dashboard() {
     }
   }
 
-  // ΓöÇΓöÇ Product CRUD ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-  const handleSaveProd = async (e: FormEvent) => {
-    e.preventDefault()
-    setProductNotice('')
-    setLoading(true)
-    try {
-      const unitType = normalizeUnitType(prodForm.unitType)
-
-      // Parse predefined options from text
-      let predefined_options: unknown[] = []
-      if (prodForm.predefinedOptionsText.trim() && (unitType === 'weight' || unitType === 'volume')) {
-        const baseUnit = unitType === 'weight' ? 'g' : 'ml'
-        predefined_options = prodForm.predefinedOptionsText.split(',').map(s => s.trim()).filter(Boolean).map(raw => {
-          const m = raw.match(/^([0-9.]+)\s*(g|kg|ml|l)?$/i)
-          if (!m) return null
-          let qty = parseFloat(m[1])
-          const unit = (m[2] || baseUnit).toLowerCase()
-          if (unit === 'kg') qty *= 1000
-          if (unit === 'l')  qty *= 1000
-          const label = unit === 'kg' ? `${parseFloat(m[1])}kg` : unit === 'l' ? `${parseFloat(m[1])}L` : `${qty}${baseUnit}`
-          return { quantity: qty, unit: baseUnit, label }
-        }).filter(Boolean)
-      }
-
-      const payload = {
-        name: prodForm.name.trim(), name_ta: prodForm.nameTa.trim(), tamil_name: prodForm.nameTa.trim(),
-        category: prodForm.category.trim(), category_id: prodForm.categoryId || null,
-        remedy: prodForm.remedy, price: toNumber(prodForm.price, 0),
-        offer_price: prodForm.offerPrice === '' ? null : toNumber(prodForm.offerPrice, 0),
-        purchase_price: prodForm.purchasePrice === '' ? null : toNumber(prodForm.purchasePrice, 0),
-        mrp: prodForm.mrp === '' ? null : toNumber(prodForm.mrp, 0),
-        sku: prodForm.sku || null,
-        barcode: prodForm.barcode || null,
-        unit_type: unitType, unit_label: prodForm.unitLabel,
-        base_quantity: toNumber(prodForm.baseQuantity, 1),
-        stock_quantity: toNumber(prodForm.stockQuantity, 0),
-        stock: Math.floor(toNumber(prodForm.stockQuantity, 0)),
-        allow_decimal_quantity: prodForm.allowDecimalQuantity,
-        predefined_options: predefined_options.length > 0 ? predefined_options : [],
-        is_active: prodForm.isActive, sort_order: toNumber(prodForm.sortOrder, 0),
-        has_variants: !!(prodForm as Record<string, unknown>).hasVariants,
-        description: prodForm.description, benefits: prodForm.benefits,
-        image_url: prodForm.image || '/product-placeholder.svg',
-        image:     prodForm.image || '/product-placeholder.svg',
-      }
-
-      const { error } = editingProd
-        ? await supabase.from('products').update(payload).eq('id', editingProd.id)
-        : await supabase.from('products').insert(payload)
-      if (error) throw error
-      setProductNotice(editingProd ? 'Product updated!' : 'Product added!')
-      setEditingProd(null); setProdForm(emptyForm)
-      await loadData()
-    } catch (err) { setProductNotice(toErr(err, 'Error saving product')) }
-    finally { setLoading(false) }
-  }
-
-  const handleEdit = (p: Product) => {
-    setEditingProd(p)
-    const optText = (p.predefinedOptions || []).map(o => o.label).join(', ')
-    setProdForm({
-      name: p.name, nameTa: p.nameTa || p.tamilName || '', category: p.category,
-      categoryId: p.categoryId ?? null, remedy: p.remedy || [],
-      price: p.price, offerPrice: p.offerPrice || '',
-      purchasePrice: p.purchasePrice || '', mrp: p.mrp || '',
-      sku: p.sku || '', barcode: p.barcode || '',
-      unitType: p.unitType,
-      unitLabel: p.unitLabel, baseQuantity: p.baseQuantity,
-      stockQuantity: p.stockQuantity || p.stock, stockUnit: p.stockUnit,
-      allowDecimalQuantity: p.allowDecimalQuantity, predefinedOptionsText: optText,
-      isActive: p.isActive, sortOrder: p.sortOrder, stock: p.stock,
-      description: p.description, descriptionTa: p.descriptionTa || '',
-      benefits: p.benefits || '', benefitsTa: p.benefitsTa || '',
-      image: p.image || p.imageUrl || '',
-      hasVariants: p.hasVariants ?? false,
-    } as typeof prodForm)
-    setVariantNotice('')
-    setEditingVariantId(null)
-    setVariantForm({ name: '', sizeLabel: '', price: '', purchasePrice: '', mrp: '', sku: '', barcode: '', stock: '50', weightValue: '', weightUnit: '', isDefault: false })
-    setTab('inventory')
-  }
-
-  const handleToggleActive = async (p: Product) => {
-    const { error } = await supabase.from('products').update({ is_active: !p.isActive }).eq('id', p.id)
-    if (error) { setProductNotice(error.message); return }
-    setProductNotice(`Product ${p.isActive ? 'deactivated' : 'activated'}`)
-    await loadData()
-  }
-
-  const handleDeleteProd = async (id: string | number) => {
-    if (!window.confirm('Permanently deactivate this product?')) return
-    const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id)
-    if (error) { setProductNotice(error.message); return }
-    setProductNotice('Product deactivated'); await loadData()
-  }
-
-  const handleSaveVariant = async (e: import('react').FormEvent) => {
-    e.preventDefault()
-    if (!editingProd) return
-    setVariantLoading(true)
-    setVariantNotice('')
-    const price = Number(variantForm.price)
-    const stock = Number(variantForm.stock)
-    if (!variantForm.name.trim()) { setVariantNotice('Variant name required'); setVariantLoading(false); return }
-    if (!(price > 0)) { setVariantNotice('Enter valid price'); setVariantLoading(false); return }
-    try {
-      const payload = {
-        productId:   String(editingProd.id),
-        variantName: variantForm.name.trim(),
-        sizeLabel:   variantForm.sizeLabel.trim() || null,
-        price,
-        stock,
-        purchasePrice: variantForm.purchasePrice ? Number(variantForm.purchasePrice) : null,
-        mrp:         variantForm.mrp ? Number(variantForm.mrp) : null,
-        sku:         variantForm.sku.trim() || null,
-        barcode:     variantForm.barcode.trim() || null,
-        weightValue: variantForm.weightValue ? Number(variantForm.weightValue) : null,
-        weightUnit:  variantForm.weightUnit.trim() || null,
-        isDefault:   variantForm.isDefault,
-        sortOrder:   getVariants(String(editingProd.id)).length,
-      }
-      if (editingVariantId) {
-        const { error } = await updateVariant(editingVariantId, payload)
-        if (error) throw new Error(error)
-        setVariantNotice('Variant updated!')
-      } else {
-        const { error } = await createVariant(payload)
-        if (error) throw new Error(error)
-        setVariantNotice('Variant added!')
-        // Ensure product has_variants = true
-        if (!editingProd.hasVariants) {
-          await supabase.from('products').update({ has_variants: true }).eq('id', editingProd.id)
-        }
-      }
-      setVariantForm({ name: '', sizeLabel: '', price: '', purchasePrice: '', mrp: '', sku: '', barcode: '', stock: '50', weightValue: '', weightUnit: '', isDefault: false })
-      setEditingVariantId(null)
-      await refetchVariants()
-    } catch (err) { setVariantNotice(toErr(err, 'Error saving variant')) }
-    finally { setVariantLoading(false) }
-  }
-
-  const handleDeleteVariant = async (variantId: string) => {
-    if (!window.confirm('Remove this variant?')) return
-    const { error } = await deleteVariant(variantId)
-    if (error) { setVariantNotice(error); return }
-    setVariantNotice('Variant removed')
-    await refetchVariants()
-  }
-
-  const handleSetDefault = async (variantId: string) => {
-    if (!editingProd) return
-    const { error } = await setDefaultVariant(variantId, String(editingProd.id))
-    if (!error) { setVariantNotice('Default updated'); await refetchVariants() }
-  }
-
-  const startEditVariant = (v: ProductVariant) => {
-    setEditingVariantId(v.id)
-    setVariantForm({
-      name: v.variantName, sizeLabel: v.sizeLabel || '', price: String(v.price),
-      purchasePrice: String(v.purchasePrice || ''), mrp: String(v.mrp || ''),
-      sku: v.sku || '', barcode: v.barcode || '',
-      stock: String(v.stock), weightValue: String(v.weightValue || ''), weightUnit: v.weightUnit || '', isDefault: !!v.isDefault
-    })
-    setVariantNotice('')
-  }
-
-  const handleUploadImage = async (file?: File) => {
-    if (!file) return
-    setImageUploading(true)
-    try { const url = await uploadProductImage(file); setProdForm(p => ({ ...p, image: url })); setProductNotice('Image uploaded!') }
-    catch (err) { setProductNotice(toErr(err, 'Upload failed')) }
-    finally { setImageUploading(false) }
-  }
-
-  const onAddCat = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!newCat.name_en.trim()) return
-    const payload = { ...newCat, name_en: newCat.name_en.trim() }
-    const { error } = editingCategoryId === null
-      ? await supabase.from('categories').insert({ ...payload, is_active: true })
-      : await supabase.from('categories').update(payload).eq('id', editingCategoryId)
-    if (error) {
-      setCategoryNotice({ type: 'error', text: error.message || 'Could not add category.' })
-      return
-    }
-    const wasEditing = editingCategoryId !== null
-    setNewCat({ name_en: '', name_ta: '' })
-    setEditingCategoryId(null)
-    setCategoryNotice({ type: 'success', text: wasEditing ? 'Category updated successfully.' : 'Category added successfully.' })
-    await loadData()
-  }
-
-  const deleteCat = async (c: Category) => {
-    if (!window.confirm(`Delete "${c.name_en}"? This cannot be undone.`)) return
-    const { error: linkedProductsError } = await supabase
-      .from('products')
-      .update({ category: 'Uncategorized', category_id: null })
-      .eq('category_id', c.id)
-    if (linkedProductsError) {
-      setCategoryNotice({ type: 'error', text: linkedProductsError.message || 'Could not unlink products from category.' })
-      return
-    }
-    const { error: legacyProductsError } = await supabase
-      .from('products')
-      .update({ category: 'Uncategorized', category_id: null })
-      .eq('category', c.name_en)
-    if (legacyProductsError) {
-      setCategoryNotice({ type: 'error', text: legacyProductsError.message || 'Could not sync products.' })
-      return
-    }
-    const { error } = await supabase.from('categories').delete().eq('id', c.id)
-    if (error) {
-      setCategoryNotice({ type: 'error', text: error.message || 'Could not delete category.' })
-      return
-    }
-    if (prodForm.categoryId === c.id || prodForm.category === c.name_en) {
-      setProdForm(form => ({ ...form, category: '', categoryId: null }))
-    }
-    setCategoryNotice({ type: 'success', text: `"${c.name_en}" deleted.` })
-    await loadData()
-  }
-
-  const toggleCat = async (c: Category) => {
-    // Optimistic update
-    setCats(prev => prev.map(cat => cat.id === c.id ? { ...cat, is_active: !c.is_active } : cat))
-    const { error } = await supabase.from('categories').update({ is_active: !c.is_active }).eq('id', c.id)
-    if (error) {
-      setCategoryNotice({ type: 'error', text: 'Failed to update category status.' })
-      // Revert on error
-      setCats(prev => prev.map(cat => cat.id === c.id ? { ...cat, is_active: c.is_active } : cat))
-    }
-  }
-
-  const moveCat = async (c: Category, dir: 'up' | 'down') => {
-    const currentIndex = cats.findIndex(cat => cat.id === c.id)
-    if (dir === 'up' && currentIndex > 0) {
-      const prevCat = cats[currentIndex - 1]
-      const normalizedCats = cats.map((cat, i) => ({ ...cat, sort_order: i * 10 }))
-      const currentNormalized = normalizedCats[currentIndex]
-      const prevNormalized = normalizedCats[currentIndex - 1]
-      
-      const temp = currentNormalized.sort_order
-      currentNormalized.sort_order = prevNormalized.sort_order
-      prevNormalized.sort_order = temp
-      
-      setCats(normalizedCats.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)))
-      
-      await Promise.all([
-        supabase.from('categories').update({ sort_order: currentNormalized.sort_order }).eq('id', c.id),
-        supabase.from('categories').update({ sort_order: prevNormalized.sort_order }).eq('id', prevCat.id)
-      ])
-    } else if (dir === 'down' && currentIndex < cats.length - 1) {
-      const nextCat = cats[currentIndex + 1]
-      const normalizedCats = cats.map((cat, i) => ({ ...cat, sort_order: i * 10 }))
-      const currentNormalized = normalizedCats[currentIndex]
-      const nextNormalized = normalizedCats[currentIndex + 1]
-      
-      const temp = currentNormalized.sort_order
-      currentNormalized.sort_order = nextNormalized.sort_order
-      nextNormalized.sort_order = temp
-      
-      setCats(normalizedCats.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)))
-      
-      await Promise.all([
-        supabase.from('categories').update({ sort_order: currentNormalized.sort_order }).eq('id', c.id),
-        supabase.from('categories').update({ sort_order: nextNormalized.sort_order }).eq('id', nextCat.id)
-      ])
-    }
-  }
 
   useEffect(() => {
     try {

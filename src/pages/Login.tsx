@@ -50,7 +50,6 @@ import { createVariant, updateVariant, deleteVariant, setDefaultVariant, type Pr
 import { useVariantStore } from '../store/store'
 import Pos from './Pos'
 import AdvanceOrders from './AdvanceOrders'
-import type { AdvanceOrder } from '../services/advanceOrderService'
 import {
   ResponsiveContainer,
   XAxis,
@@ -283,47 +282,6 @@ export default function Dashboard() {
     remarks: row.remarks ? String(row.remarks) : undefined,
     reference_number: row.reference_number ? String(row.reference_number) : undefined,
   })
-
-  const handleAdvanceOrderCompleted = useCallback((advance: AdvanceOrder) => {
-    if (!advance.completed_order_id || !advance.invoice_number) return
-    const createdAt = advance.completed_at || new Date().toISOString()
-    const fallbackItem = {
-      name: advance.product_name,
-      category: advance.category,
-      quantity: 1,
-      base_price: advance.total_amount,
-      line_total: advance.total_amount,
-      unit: 'piece',
-      unit_type: 'unit',
-      source: 'advance_order',
-    }
-    const completedItems = advance.products.length ? advance.products : [fallbackItem]
-    const completed: DashboardOrder = {
-      id: advance.completed_order_id,
-      invoice_no: advance.invoice_number,
-      customer_name: advance.customer_name,
-      phone: advance.phone,
-      address: advance.address,
-      created_at: createdAt,
-      total: advance.total_amount,
-      status: 'completed',
-      order_mode: 'offline',
-      order_type: 'advance_order',
-      user_id: user?.id || null,
-      items: completedItems,
-      coupon_code: '',
-      discount_amount: 0,
-      manual_discount_amount: 0,
-      delivery_charge: 0,
-      total_gst: 0,
-      payment_mode: advance.final_payment_method || '',
-      payment_method: advance.final_payment_method || '',
-      invoice_pdf_url: '',
-    }
-    setOrders(current => [completed, ...current.filter(order => order.id !== completed.id)])
-    setSearchResults(current => [completed, ...current.filter(order => order.id !== completed.id)].slice(0, 100))
-    setOrderItems(current => [...completedItems.map(item => ({ order_id: completed.id, product_name: String(item.name || 'Product'), category: String(item.category || advance.category || ''), quantity: Number(item.quantity || 1), line_total: Number(item.line_total || 0), is_manual: false })), ...current.filter(row => row.order_id !== completed.id)])
-  }, [user?.id])
 
   // Analytics (date-aware)
   const analytics = useMemo(() => {

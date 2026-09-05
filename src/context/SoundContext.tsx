@@ -24,7 +24,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     if (!soundEnabled) return;
 
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
       const ctx = new AudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -85,6 +85,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- provider + hook co-located by design
 export function useSound() {
   const context = useContext(SoundContext);
   if (context === undefined) {

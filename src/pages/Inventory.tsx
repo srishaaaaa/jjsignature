@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Trash2, ChevronDown, Download, TrendingUp, PieChart } from 'lucide-react'
+import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Trash2, Download, TrendingUp, PieChart } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
 import { useSound } from '../context/SoundContext'
@@ -15,6 +15,7 @@ interface InventoryProduct {
   is_active: boolean
   updated_at: string
   image_url?: string
+  item_type?: 'product' | 'service'
 }
 
 interface Category {
@@ -247,8 +248,8 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
                 {logs.map(log => (
                   <tr key={log.id} className="hover:bg-orange-50/30">
                     <td className="px-4 py-3 text-[11px] text-[#6B7280] whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-MY')}<br/><span className="text-[10px] opacity-70">{new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span></td>
-                    <td className="px-4 py-3 font-bold text-[#111111] max-w-[140px] truncate">{(log.products as any)?.name || '—'}</td>
-                    <td className="px-4 py-3 text-[#6B7280] text-xs">{(log.products as any)?.category || '—'}</td>
+                    <td className="px-4 py-3 font-bold text-[#111111] max-w-[140px] truncate">{log.products?.name || '—'}</td>
+                    <td className="px-4 py-3 text-[#6B7280] text-xs">{log.products?.category || '—'}</td>
                     <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span></td>
                     <td className="px-4 py-3 font-bold text-[#374151]">{log.old_quantity}</td>
                     <td className="px-4 py-3 font-bold text-[#374151]">{log.new_quantity}</td>
@@ -431,7 +432,7 @@ export default function Inventory() {
       stock_quantity: String(p.stock_quantity),
       low_stock_alert: String(p.low_stock_alert || 5),
       is_active: p.is_active,
-      item_type: ((p as any).item_type === 'service' ? 'service' : 'product') as 'product' | 'service',
+      item_type: p.item_type === 'service' ? 'service' : 'product',
     })
     setProductNotice('')
     setActiveTab('products')
@@ -476,9 +477,9 @@ export default function Inventory() {
       }
       play('success')
       void fetchProducts()
-    } catch (err: any) {
+    } catch (err) {
       console.error('Save product error:', err)
-      setProductNotice(`Failed to save: ${err.message || JSON.stringify(err)}`)
+      setProductNotice(`Failed to save: ${err instanceof Error ? err.message : JSON.stringify(err)}`)
       play('error')
     } finally {
       setSavingProduct(false)
