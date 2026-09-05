@@ -36,6 +36,16 @@ export function getSubscriberDigits(input: string): string | null {
   return normalized ? normalized.slice(2) : null
 }
 
+// Human-readable form for receipts/invoices/order lists — e.g. "918122921906"
+// -> "+91 81229 21906". Stored/WhatsApp-facing values stay digits-only; this is
+// display-only formatting.
+export function formatPhoneDisplay(input: string): string {
+  const normalized = normalizePhone(input)
+  if (!normalized) return input
+  const subscriber = normalized.slice(2)
+  return `+91 ${subscriber.slice(0, 5)} ${subscriber.slice(5)}`
+}
+
 export function normalizePhoneForWhatsApp(input: string): string {
   if (!input) return ''
   const digits = input.replace(/\D/g, '')

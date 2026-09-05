@@ -209,26 +209,24 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
                   {filtered.map(product => (
                     <div key={product.id}
                       className="bg-white border border-[#FDDBB4]/60 rounded-2xl p-3 flex flex-col gap-2 hover:border-[#B08A1C]/40 hover:shadow-md transition-all group relative">
-                      <div className="flex justify-end gap-1 mb-1">
-                        <button onClick={(e) => { e.stopPropagation(); startEdit(product) }} title="Edit product"
-                          className="p-1.5 rounded-lg bg-white border border-[#FDDBB4]/60 text-[#374151] hover:text-[#B08A1C] hover:border-[#B08A1C]/40 shadow-sm transition-colors">
-                          <Edit2 size={14} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); void handleDelete(product) }} title="Delete product"
-                          className="p-1.5 rounded-lg bg-white border border-[#FDDBB4]/60 text-red-400 hover:text-red-600 hover:border-red-300 shadow-sm transition-colors">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                      <div onClick={() => onAdd(product)} className="cursor-pointer flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h4 className="text-[13px] font-black text-[#111111] leading-tight group-hover:text-[#B08A1C] transition-colors">{product.name}</h4>
-                            {product.nameTa && <p className="text-[10px] font-bold text-[#374151] mt-0.5 truncate">{product.nameTa}</p>}
-                          </div>
-                          <span className={`shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${product.itemType === 'service' ? 'text-purple-700 bg-purple-50 border-purple-200' : 'text-blue-700 bg-blue-50 border-blue-200'}`}>
-                            {product.itemType === 'service' ? '✂️ Service' : '📦 Product'}
-                          </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 onClick={() => onAdd(product)} className="min-w-0 flex-1 cursor-pointer text-[13px] font-black text-[#111111] leading-tight group-hover:text-[#B08A1C] transition-colors">{product.name}</h4>
+                        <div className="flex shrink-0 gap-1">
+                          <button onClick={(e) => { e.stopPropagation(); startEdit(product) }} title="Edit product"
+                            className="p-1.5 rounded-lg bg-white border border-[#FDDBB4]/60 text-[#374151] hover:text-[#B08A1C] hover:border-[#B08A1C]/40 shadow-sm transition-colors">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); void handleDelete(product) }} title="Delete product"
+                            className="p-1.5 rounded-lg bg-white border border-[#FDDBB4]/60 text-red-400 hover:text-red-600 hover:border-red-300 shadow-sm transition-colors">
+                            <Trash2 size={14} />
+                          </button>
                         </div>
+                      </div>
+                      {product.nameTa && <p onClick={() => onAdd(product)} className="-mt-1 cursor-pointer truncate text-[10px] font-bold text-[#374151]">{product.nameTa}</p>}
+                      <div onClick={() => onAdd(product)} className="cursor-pointer flex-1">
+                        <span className={`inline-block text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${product.itemType === 'service' ? 'text-purple-700 bg-purple-50 border-purple-200' : 'text-blue-700 bg-blue-50 border-blue-200'}`}>
+                          {product.itemType === 'service' ? '✂️ Service' : '📦 Product'}
+                        </span>
                       </div>
                       <div onClick={() => onAdd(product)} className="cursor-pointer">
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#FDDBB4]/30 gap-2">

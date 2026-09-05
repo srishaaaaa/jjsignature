@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Trash2, ChevronDown, Download, TrendingUp, PieChart } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
@@ -276,6 +276,8 @@ export default function Inventory() {
   const [adjustModal, setAdjustModal] = useState<AdjustModal | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState('')
+  const [stockAlertNotice, setStockAlertNotice] = useState<string | null>(null)
+  const hasNotifiedStock = useRef(false)
 
   // Product form state
   const [productForm, setProductForm] = useState<ProductForm>(EMPTY_FORM)
@@ -292,8 +294,12 @@ export default function Inventory() {
   const [catNotice, setCatNotice] = useState('')
 
   const downloadCSV = () => {
+    // Wrapping a field as ="..." forces Excel to import it as literal text
+    // instead of re-parsing it as a number/date (which mangles long digit
+    // strings into scientific notation and reformats dates unpredictably).
+    const csvForceText = (value: unknown) => `="${String(value).replace(/"/g, '""')}"`
     const headers = ['ID', 'Product Name', 'Category', 'Stock Quantity', 'Low Stock Alert', 'Price (Rs.)', 'Purchase Price (Rs.)', 'Status', 'Last Updated']
-    const rows = products.map(p => {
+    const rows = activeProducts.map(p => {
       const status = p.stock_quantity <= 0 ? 'Out of Stock' : p.stock_quantity <= p.low_stock_alert ? 'Low Stock' : 'In Stock'
       return [
         p.id,
@@ -304,7 +310,7 @@ export default function Inventory() {
         p.price,
         p.purchase_price || 0,
         status,
-        new Date(p.updated_at).toLocaleString('en-MY')
+        csvForceText(new Date(p.updated_at).toLocaleString('en-IN'))
       ].join(',')
     })
     
@@ -338,8 +344,32 @@ export default function Inventory() {
     void fetchCategories()
   }, [fetchProducts, fetchCategories])
 
+  // Announce current low/out-of-stock items with a sound every time this tab
+  // is opened (the component fully unmounts when switching away, so this
+  // fires fresh on each visit — not just when a new item first crosses the
+  // threshold).
+  useEffect(() => {
+    if (loading || hasNotifiedStock.current) return
+    hasNotifiedStock.current = true
+    const active = products.filter(p => p.is_active !== false)
+    const low = active.filter(p => getStatus(p) === 'low')
+    const out = active.filter(p => getStatus(p) === 'out')
+    if (low.length + out.length === 0) return
+    play('alert')
+    const parts: string[] = []
+    if (out.length > 0) parts.push(`${out.length} out of stock`)
+    if (low.length > 0) parts.push(`${low.length} running low`)
+    setStockAlertNotice(parts.join(' · '))
+  }, [loading, products, play])
+
   // ── Stock Management ──────────────────────────────────────────────
-  const filtered = products.filter(p => {
+  // Retired/hidden products (is_active = false) stay manageable from the
+  // Add/Edit Products tab (which already shows a "Hidden" badge for them),
+  // but they don't belong in the live stock view — otherwise every retired
+  // duplicate shows up here looking identical to a real, sellable product.
+  const activeProducts = products.filter(p => p.is_active !== false)
+
+  const filtered = activeProducts.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
     const status = getStatus(p)
     if (filter === 'low') return matchSearch && status === 'low'
@@ -347,9 +377,9 @@ export default function Inventory() {
     return matchSearch
   })
 
-  const lowCount = products.filter(p => getStatus(p) === 'low').length
-  const outCount = products.filter(p => getStatus(p) === 'out').length
-  const stockValue = products.reduce((s, p) => s + (p.stock_quantity * p.price), 0)
+  const lowCount = activeProducts.filter(p => getStatus(p) === 'low').length
+  const outCount = activeProducts.filter(p => getStatus(p) === 'out').length
+  const stockValue = activeProducts.reduce((s, p) => s + (p.stock_quantity * p.price), 0)
 
   const openAdjust = (product: InventoryProduct) => {
     const status = getStatus(product)
@@ -512,6 +542,18 @@ export default function Inventory() {
         </button>
       </div>
 
+      {stockAlertNotice && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3">
+          <div className="flex items-center gap-2 text-orange-800">
+            <AlertTriangle size={18} className="shrink-0" />
+            <p className="text-sm font-bold">Stock alert: {stockAlertNotice}. Check the Stock Management tab below.</p>
+          </div>
+          <button onClick={() => setStockAlertNotice(null)} className="shrink-0 text-orange-700 hover:text-orange-900">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-2 border-b border-[#FDDBB4]/60 pb-2 overflow-x-auto">
         {([['stock', 'Stock Management'], ['products', 'Add / Edit Products'], ['categories', 'Categories'], ['analytics', 'Analytics & Reports']] as const).map(([key, label]) => (
@@ -528,7 +570,7 @@ export default function Inventory() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Total Products', value: products.length, color: 'text-[#111111]', bg: 'bg-white' },
+              { label: 'Total Products', value: activeProducts.length, color: 'text-[#111111]', bg: 'bg-white' },
               { label: 'Low Stock', value: lowCount, color: 'text-orange-600', bg: 'bg-orange-50' },
               { label: 'Out of Stock', value: outCount, color: 'text-red-600', bg: 'bg-red-50' },
               { label: 'Stock Value', value: formatCurrency(stockValue), color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -827,7 +869,7 @@ export default function Inventory() {
       )}
 
       {/* 📊 ANALYTICS & REPORTS TAB 📊 */}
-      {activeTab === 'analytics' && <InventoryAnalytics products={products} downloadCSV={downloadCSV} />}
+      {activeTab === 'analytics' && <InventoryAnalytics products={activeProducts} downloadCSV={downloadCSV} />}
 
       {/* ── Adjust Stock Modal ── */}
       {adjustModal && (

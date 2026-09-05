@@ -19,10 +19,17 @@ export default function LowStockAlert() {
   const products = useProductStore(state => state.products)
   const { play } = useSound()
   const flaggedIds = useRef(new Set<string | number>())
+  const wasLoggedIn = useRef(false)
   const [toasts, setToasts] = useState<Toast[]>([])
 
   useEffect(() => {
-    if (!isLoggedIn) return
+    if (!isLoggedIn) { wasLoggedIn.current = false; return }
+
+    // Fresh login — re-announce every currently low/out-of-stock item, not
+    // just ones that have newly crossed the threshold since last check.
+    const justLoggedIn = !wasLoggedIn.current
+    wasLoggedIn.current = true
+    if (justLoggedIn) flaggedIds.current.clear()
 
     const lowStock = products.filter(p => p.isActive && getStockStatus(p) !== 'ok')
     const stillLowIds = new Set(lowStock.map(p => p.id))

@@ -41,6 +41,7 @@ const RMIcon = ({ size = 16, className = '' }: { size?: number; className?: stri
 )
 import { useAuthStore, useProductStore, type Product } from '../store/store'
 import { formatCurrency, normalizeOrderMode, toNumber } from '../lib/retail'
+import { formatPhoneDisplay } from '../lib/phone'
 import { BRAND_EN, BRAND_LOGO } from '../lib/brand'
 
 type BillingOrder = {
@@ -137,6 +138,12 @@ const parseOrderItems = (items: unknown): Record<string, unknown>[] => {
   return []
 }
 
+// Excel auto-parses plain digits/dates in a CSV as numbers/dates (scientific
+// notation for long phone numbers, reformatted dates), no matter how wide the
+// column is. Wrapping a field as ="..." forces Excel to import it as literal
+// text and leave it alone.
+const csvForceText = (value: unknown) => `="${String(value).replace(/"/g, '""')}"`
+
 const exportCSV = (orders: BillingOrder[]) => {
   const header = ['Invoice No', 'Customer', 'Phone', 'Bill Type', 'Coupon', 'Discount', 'Delivery', 'Total', 'Date', 'Status']
   const rows = orders.map((order) => {
@@ -148,13 +155,13 @@ const exportCSV = (orders: BillingOrder[]) => {
     return [
       order.invoice_no || '—',
       order.customer_name,
-      order.phone,
+      csvForceText(order.phone ? formatPhoneDisplay(order.phone) : ''),
       billType,
       order.coupon_code || '',
       toNumber(order.discount_amount, 0).toFixed(2),
       toNumber(order.delivery_charge, 0).toFixed(2),
       toNumber(order.total, 0).toFixed(2),
-      new Date(order.created_at).toLocaleDateString('en-MY'),
+      csvForceText(new Date(order.created_at).toLocaleDateString('en-IN')),
       order.status,
     ]
   })
@@ -807,7 +814,7 @@ export default function BillingAnalytics() {
                       <tr key={order.id} className="hover:bg-[#F9FAFB]/50">
                         <td className="whitespace-nowrap px-3 py-3 font-bold text-[#10B981]">{order.invoice_no || '—'}</td>
                         <td className="max-w-[140px] truncate px-3 py-3 font-semibold text-[#111111]">{order.customer_name}</td>
-                        <td className="whitespace-nowrap px-3 py-3 text-[#374151]">{order.phone}</td>
+                        <td className="whitespace-nowrap px-3 py-3 text-[#374151]">{order.phone ? formatPhoneDisplay(order.phone) : ''}</td>
                         <td className="px-3 py-3">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${billTypeClass}`}>{billTypeLabel}</span>
                         </td>

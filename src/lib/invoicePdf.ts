@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas'
 import { BRAND_ADDRESS, BRAND_EN, BRAND_PHONE_DISPLAY } from './brand'
 import { formatCurrency, formatQuantityDisplay, normalizeStructuredOrderItem, formatInvoiceNo } from './retail'
 import { LOGO_BASE64 } from './logoBase64'
+import { formatPhoneDisplay } from './phone'
 
 export type InvoicePdfData = {
   invoiceNo: string
@@ -68,7 +69,7 @@ export function createInvoicePdf(data: InvoicePdfData): Blob {
   y += 28
 
   const customerName = String(data.customerName || 'Walk-in Customer').trim()
-  const customerPhone = String(data.phone || '—').trim()
+  const customerPhone = data.phone ? formatPhoneDisplay(String(data.phone).trim()) : '—'
   const customerAddress = String(data.address || '').trim()
   const customerNameLines = doc.splitTextToSize(customerName, 165) as string[]
   const customerAddressLines = customerAddress

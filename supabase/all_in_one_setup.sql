@@ -2311,4 +2311,50 @@ WHERE name IN (
   'Anarkali with Lining'
 );
 
+-- 7. Self-healing duplicate guard. Section 5's main catalog UPDATE matches by
+-- product name only and sets is_active = TRUE — so if it (or an older cached
+-- copy of this script) ever runs again while a stray "Tailoring" copy of one
+-- of these 15 items coexists with its correctly-categorized Saree/Salwar
+-- copy, both rows get reactivated and the duplicate resurfaces in the admin
+-- catalog. This retires the Tailoring copy again whenever that happens,
+-- keeping only the Saree/Salwar copy live. Safe to re-run.
+UPDATE public.products dup
+SET is_active = FALSE, updated_at = NOW()
+FROM public.products keep
+WHERE dup.category = 'Tailoring'
+  AND keep.category IN ('Saree', 'Salwar')
+  AND keep.is_active = TRUE
+  AND dup.id <> keep.id
+  AND LOWER(BTRIM(dup.name)) = LOWER(BTRIM(keep.name))
+  AND LOWER(BTRIM(dup.name)) IN (
+    'blouse with lining', 'blouse with lining & cup', 'blouse with stones', 'blouse with laces',
+    'blouse with aari laces', 'falls stitching', 'falls', 'saree pre pleating', 'readymade saree',
+    'aari work blouse', 'readymade blouse', 'punjabi suit without lining', 'punjabi suit with lining',
+    'anarkali without lining', 'anarkali with lining'
+  );
+
+-- 8. Fix the staff attendance clock columns. Migration 0001 (new_modules)
+-- created public.attendance with a column named check_in_time and no
+-- clock-out column at all, but both StaffPunch.tsx (the public self-punch
+-- page) and Attendance.tsx (the admin view) read/write clock_in and
+-- clock_out — a naming mismatch that has never worked, since PostgREST
+-- errors with "column does not exist" on every Punch In attempt. Rename the
+-- existing column (preserving any punch-in history already recorded) and
+-- add the missing clock_out column.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'attendance' AND column_name = 'check_in_time'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'attendance' AND column_name = 'clock_in'
+  ) THEN
+    ALTER TABLE public.attendance RENAME COLUMN check_in_time TO clock_in;
+  END IF;
+END;
+$$;
+ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_in TIMESTAMPTZ;
+ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_out TIMESTAMPTZ;
+
 NOTIFY pgrst, 'reload schema';
