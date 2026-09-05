@@ -100,7 +100,16 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
       price: Number(editForm.price),
         stock_quantity: Number(editForm.stockQuantity),
     }).eq('id', editingProduct.id)
-    if (error) { setEditError(error.message); setEditLoading(false); return }
+    if (error) {
+      const isDuplicate = error.code === '23505' || error.message.includes('products_category_name_unique')
+      setEditError(
+        isDuplicate
+          ? `A product named "${editForm.name.trim()}" already exists in the "${categoryName}" category. Use a different name, or edit that existing product instead.`
+          : error.message
+      )
+      setEditLoading(false)
+      return
+    }
     await fetchProducts(true)
     setEditLoading(false)
     cancelEdit()

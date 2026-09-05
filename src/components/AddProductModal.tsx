@@ -18,6 +18,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    purchasePrice: '',
     price: '',
     stock: '10'
   })
@@ -75,7 +76,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         category: categoryName || 'Uncategorized',
         category_id: categoryId,
         price: Number(formData.price),
-        stock: Number(formData.stock),
+        purchase_price: formData.purchasePrice ? Number(formData.purchasePrice) : 0,
+        stock_quantity: Number(formData.stock),
         is_active: true,
         unit: '1pc',
         base_quantity: 1,
@@ -158,8 +160,21 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Price (₹)</label>
+              <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Cost Price (₹)</label>
+              <input
+                type="number"
+                value={formData.purchasePrice}
+                onChange={e => setFormData({...formData, purchasePrice: e.target.value})}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold text-right"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Selling Price (₹)</label>
               <input
                 type="number"
                 value={formData.price}

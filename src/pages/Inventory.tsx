@@ -481,9 +481,11 @@ export default function Inventory() {
     setSavingProduct(true)
     setProductNotice('')
     try {
+      const selectedCategory = categories.find(c => c.name_en.trim().toLowerCase() === productForm.category.trim().toLowerCase())
       const payload = {
         name: productForm.name.trim(),
         category: productForm.category.trim() || null,
+        category_id: selectedCategory ? selectedCategory.id : null,
         price: parseFloat(productForm.price) || 0,
         purchase_price: productForm.purchase_price ? parseFloat(productForm.purchase_price) : 0,
         stock_quantity: parseFloat(productForm.stock_quantity) || 0,
@@ -506,7 +508,14 @@ export default function Inventory() {
       void fetchProducts()
     } catch (err) {
       console.error('Save product error:', err)
-      setProductNotice(`Failed to save: ${err instanceof Error ? err.message : JSON.stringify(err)}`)
+      const message = err instanceof Error ? err.message : JSON.stringify(err)
+      const code = (err && typeof err === 'object' && 'code' in err) ? (err as { code?: string }).code : undefined
+      const isDuplicate = code === '23505' || message.includes('products_category_name_unique')
+      setProductNotice(
+        isDuplicate
+          ? `A product named "${productForm.name.trim()}" already exists in the "${productForm.category || 'selected'}" category. Use a different name, or edit that existing product instead.`
+          : `Failed to save: ${message}`
+      )
       play('error')
     } finally {
       setSavingProduct(false)
