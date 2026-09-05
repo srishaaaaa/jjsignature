@@ -294,11 +294,12 @@ export default function Inventory() {
   const [catNotice, setCatNotice] = useState('')
 
   const downloadCSV = () => {
-    const headers = ['ID', 'Product Name', 'Category', 'Stock Quantity', 'Low Stock Alert', 'Price (Rs.)', 'Purchase Price (Rs.)', 'Status', 'Last Updated']
+    const headers = ['ID', 'Product Name', 'Category', 'Stock Quantity', 'Low Stock Alert', 'Price (Rs.)', 'Purchase Price (Rs.)', 'Status', 'Last Updated Date', 'Last Updated Time']
     const rows = activeProducts.map(p => {
       const status = p.stock_quantity <= 0 ? 'Out of Stock' : p.stock_quantity <= p.low_stock_alert ? 'Low Stock' : 'In Stock'
       const updated = new Date(p.updated_at)
-      const lastUpdated = `${updated.toLocaleDateString('en-IN')} ${updated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+      const updatedDate = updated.toLocaleDateString('en-IN')
+      const updatedTime = updated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
       return [
         p.id,
         p.name,
@@ -308,7 +309,8 @@ export default function Inventory() {
         p.price,
         p.purchase_price || 0,
         status,
-        lastUpdated,
+        updatedDate,
+        updatedTime,
       ]
     })
 
