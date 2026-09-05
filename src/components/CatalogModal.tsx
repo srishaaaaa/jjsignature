@@ -230,7 +230,12 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
                       </div>
                       <div onClick={() => onAdd(product)} className="cursor-pointer">
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#FDDBB4]/30 gap-2">
-                          <span className="text-[14px] font-black text-[#111111] shrink-0 whitespace-nowrap">₹{product.price}</span>
+                          <div className="flex flex-col shrink-0">
+                            <span className="text-[14px] font-black text-[#111111] whitespace-nowrap">₹{product.price}</span>
+                            {!!product.purchasePrice && (
+                              <span className="text-[9px] font-bold text-[#9CA3AF] whitespace-nowrap">Cost: ₹{product.purchasePrice}</span>
+                            )}
+                          </div>
                           <div className="flex items-center justify-end gap-1.5 overflow-hidden">
                             {product.stockQuantity <= (product.lowStockAlert || 5) && (
                                <span className="text-[9px] font-black text-red-600 bg-red-50 border border-red-200 uppercase tracking-wider px-2 py-1 rounded shrink-0" title={`Stock: ${product.stockQuantity}`}>Low Stock</span>

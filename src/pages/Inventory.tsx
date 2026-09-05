@@ -28,8 +28,8 @@ interface Category {
 
 interface AdjustModal {
   product: InventoryProduct
-  newQty: string
-  adjustType: 'restock' | 'correction' | 'loss' | 'return'
+  qty: string
+  adjustType: 'restock' | 'loss' | 'return'
   note: string
 }
 
@@ -121,7 +121,6 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
     return: 'bg-purple-100 text-purple-700',
     loss: 'bg-red-100 text-red-700',
     manual_adjustment: 'bg-orange-100 text-orange-700',
-    correction: 'bg-yellow-100 text-yellow-700',
   }
 
   return (
@@ -295,28 +294,28 @@ export default function Inventory() {
   const [catNotice, setCatNotice] = useState('')
 
   const downloadCSV = () => {
-    // Wrapping a field as ="..." forces Excel to import it as literal text
-    // instead of re-parsing it as a number/date (which mangles long digit
-    // strings into scientific notation and reformats dates unpredictably).
-    const csvForceText = (value: unknown) => `="${String(value).replace(/"/g, '""')}"`
     const headers = ['ID', 'Product Name', 'Category', 'Stock Quantity', 'Low Stock Alert', 'Price (Rs.)', 'Purchase Price (Rs.)', 'Status', 'Last Updated']
     const rows = activeProducts.map(p => {
       const status = p.stock_quantity <= 0 ? 'Out of Stock' : p.stock_quantity <= p.low_stock_alert ? 'Low Stock' : 'In Stock'
+      const updated = new Date(p.updated_at)
+      const lastUpdated = `${updated.toLocaleDateString('en-IN')} ${updated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`
       return [
         p.id,
-        `"${p.name.replace(/"/g, '""')}"`,
-        `"${(p.category || '').replace(/"/g, '""')}"`,
+        p.name,
+        p.category || '',
         p.stock_quantity,
         p.low_stock_alert,
         p.price,
         p.purchase_price || 0,
         status,
-        csvForceText(new Date(p.updated_at).toLocaleString('en-IN'))
-      ].join(',')
+        lastUpdated,
+      ]
     })
-    
-    const csvContent = [headers.join(','), ...rows].join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.setAttribute('download', `inventory_report_${new Date().toISOString().split('T')[0]}.csv`)
@@ -385,14 +384,18 @@ export default function Inventory() {
   const openAdjust = (product: InventoryProduct) => {
     const status = getStatus(product)
     if (status === 'low' || status === 'out') play('alert')
-    setAdjustModal({ product, newQty: String(product.stock_quantity), adjustType: 'restock', note: '' })
+    setAdjustModal({ product, qty: '', adjustType: 'restock', note: '' })
   }
 
   const saveAdjust = async () => {
     if (!adjustModal) return
-    const { product, newQty, adjustType, note } = adjustModal
-    const newQtyNum = parseFloat(newQty)
-    if (isNaN(newQtyNum) || newQtyNum < 0) { setNotice('Please enter a valid quantity.'); return }
+    const { product, qty, adjustType, note } = adjustModal
+    const enteredQty = parseFloat(qty)
+    if (isNaN(enteredQty) || enteredQty <= 0) { setNotice('Please enter a valid quantity.'); return }
+    const isAddition = adjustType === 'restock' || adjustType === 'return'
+    const adjustment = isAddition ? enteredQty : -enteredQty
+    const newQtyNum = product.stock_quantity + adjustment
+    if (newQtyNum < 0) { setNotice('Cannot remove more than the current stock.'); return }
     setSaving(true)
     try {
       const { error: updateErr } = await supabase
@@ -405,8 +408,8 @@ export default function Inventory() {
         product_id: product.id,
         old_quantity: product.stock_quantity,
         new_quantity: newQtyNum,
-        adjustment: newQtyNum - product.stock_quantity,
-        reason: adjustType === 'restock' ? 'restock' : adjustType === 'loss' ? 'loss' : adjustType === 'return' ? 'return' : 'manual_adjustment',
+        adjustment,
+        reason: adjustType,
         reference_id: note || null,
       }).then(() => {})
 
@@ -900,22 +903,30 @@ export default function Inventory() {
                 <select value={adjustModal.adjustType} onChange={e => setAdjustModal(m => m ? { ...m, adjustType: e.target.value as AdjustModal['adjustType'] } : m)}
                   className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C] bg-white">
                   <option value="restock">Restock (received new stock)</option>
-                  <option value="correction">Correction (fix count)</option>
                   <option value="loss">Loss / Damaged</option>
                   <option value="return">Customer Return</option>
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase text-[#374151] mb-1.5">New Quantity</label>
-                <input type="number" min="0" value={adjustModal.newQty} onChange={e => setAdjustModal(m => m ? { ...m, newQty: e.target.value } : m)}
+                <label className="block text-[10px] font-black uppercase text-[#374151] mb-1.5">
+                  Quantity to {adjustModal.adjustType === 'loss' ? 'Deduct' : 'Add'}
+                </label>
+                <input type="number" min="0" value={adjustModal.qty} onChange={e => setAdjustModal(m => m ? { ...m, qty: e.target.value } : m)}
+                  placeholder="e.g. 50"
                   className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C] text-right" />
-                {adjustModal.newQty !== '' && !isNaN(parseFloat(adjustModal.newQty)) && (
-                  <p className="text-[11px] text-[#6B7280] mt-1 text-right">
-                    Change: <span className={parseFloat(adjustModal.newQty) >= adjustModal.product.stock_quantity ? 'text-green-600 font-black' : 'text-red-600 font-black'}>
-                      {parseFloat(adjustModal.newQty) >= adjustModal.product.stock_quantity ? '+' : ''}{parseFloat(adjustModal.newQty) - adjustModal.product.stock_quantity}
-                    </span>
-                  </p>
-                )}
+                {adjustModal.qty !== '' && !isNaN(parseFloat(adjustModal.qty)) && (() => {
+                  const entered = parseFloat(adjustModal.qty)
+                  const isAddition = adjustModal.adjustType === 'restock' || adjustModal.adjustType === 'return'
+                  const newTotal = adjustModal.product.stock_quantity + (isAddition ? entered : -entered)
+                  return (
+                    <p className="text-[11px] text-[#6B7280] mt-1 text-right">
+                      New Stock: <span className="font-black text-[#111111]">{newTotal}</span>{' '}
+                      (Change: <span className={isAddition ? 'text-green-600 font-black' : 'text-red-600 font-black'}>
+                        {isAddition ? '+' : '-'}{entered}
+                      </span>)
+                    </p>
+                  )
+                })()}
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase text-[#374151] mb-1.5">Note</label>

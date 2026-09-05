@@ -26,7 +26,6 @@ import {
   formatQuantityDisplay,
   formatInvoiceNo,
 } from '../lib/retail'
-import { PAYMENT_METHODS } from '../lib/paymentMethods'
 import { buildProfessionalWhatsAppMessage, buildAdvanceDepositWhatsAppMessage } from '../lib/whatsappMessage'
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getProductImage, onImgError } from '../lib/productImages'
@@ -98,6 +97,9 @@ const recalc = (item: PosItem, nextQty: number): PosItem => {
 }
 
 
+// ── Billing panel payment modes ────────────────────────────────────────────
+const BILLING_PAYMENT_METHODS = ['Cash', 'Credit Card', 'Debit Card', 'GPay', 'Others'] as const
+
 // ── Category colours ───────────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CAT_COLOR: Record<string, string> = {
@@ -130,7 +132,6 @@ export default function Pos(props: PosProps = {}) {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' })
   const [remarks, setRemarks] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
-  const [tailorName, setTailorName] = useState('')
   const [billingDate, setBillingDate] = useState('') // '' = use current date/time
   const [paymentType, setPaymentType] = useState<string>('Cash')
   const [saving, setSaving] = useState(false)
@@ -374,7 +375,6 @@ export default function Pos(props: PosProps = {}) {
     setShipping('0')
     setRemarks('')
     setReferenceNumber('')
-    setTailorName('')
     setBillingDate('')
     setBillGstEnabled(false)
     setGstInput('')
@@ -563,7 +563,6 @@ export default function Pos(props: PosProps = {}) {
         delivery_charge: Number(shipping || 0),
         remarks: remarks.trim(),
         reference_number: referenceNumber.trim(),
-        tailor_name: tailorName.trim(),
         billing_date: effectiveBillingDate,
       }).eq('id', created.orderId)
       const createdInvoice: InvoiceSnap = {
@@ -979,16 +978,6 @@ export default function Pos(props: PosProps = {}) {
                 />
               </div>
               <div>
-                <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Tailor Name</label>
-                <input
-                  type="text"
-                  value={tailorName}
-                  onChange={e => setTailorName(e.target.value)}
-                  placeholder="Optional tailor name"
-                  className="w-full h-12 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[16px] md:text-[13px] font-bold text-[#111111] placeholder:text-gray-400 placeholder:font-medium"
-                />
-              </div>
-              <div>
                 <label className="block text-[13px] md:text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Billing Date (Optional)</label>
                 <input
                   id="pos-billing-date"
@@ -1350,7 +1339,7 @@ export default function Pos(props: PosProps = {}) {
 
               {/* GST Toggle */}
               <div className="flex items-center justify-between py-1 border-b border-[#FDDBB4]/40">
-                <span className="text-[11px] font-black text-[#374151]">Enable SST on Bill</span>
+                <span className="text-[11px] font-black text-[#374151]">Enable GST on Bill</span>
                 <button
                   type="button"
                   onClick={() => setBillGstEnabled(!billGstEnabled)}
@@ -1419,21 +1408,17 @@ export default function Pos(props: PosProps = {}) {
               {/* Payment Mode Selector */}
               <div>
                 <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1">Payment Mode</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {PAYMENT_METHODS.map(mode => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setPaymentType(mode)}
-                      className={`py-2 rounded-xl text-[11px] font-black uppercase tracking-wide border-2 transition-colors ${
-                        paymentType === mode
-                          ? 'bg-[#B08A1C] text-white border-[#B08A1C]'
-                          : 'bg-white text-[#374151] border-[#FDDBB4]/60 hover:border-[#B08A1C]/40'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <select
+                    value={paymentType}
+                    onChange={e => setPaymentType(e.target.value)}
+                    className="w-full h-11 appearance-none px-3 pr-8 bg-white border-2 border-[#FDDBB4]/60 rounded-xl text-[12px] font-black uppercase tracking-wide text-[#374151] focus:outline-none focus:border-[#B08A1C]"
+                  >
+                    {BILLING_PAYMENT_METHODS.map(mode => (
+                      <option key={mode} value={mode}>{mode}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] pointer-events-none" />
                 </div>
               </div>
 

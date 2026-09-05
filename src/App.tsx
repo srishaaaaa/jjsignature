@@ -97,7 +97,7 @@ function AppShell() {
   }, [fetchProducts, fetchVariants])
 
   return (
-    <div className="h-screen w-full max-w-[100vw] overflow-hidden bg-bgMain print:block print:h-auto print:overflow-visible">
+    <div className="h-dvh w-full max-w-[100vw] overflow-hidden bg-bgMain print:block print:h-auto print:overflow-visible">
       <main className="h-full print:block print:overflow-visible">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
