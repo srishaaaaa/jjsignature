@@ -78,7 +78,9 @@ export function createInvoicePdf(data: InvoicePdfData): Blob {
   const customerBoxHeight = 19 + customerNameLines.length * 4 + customerAddressLines.length * 4
 
   doc.setFillColor('#FFF3E8')
-  doc.roundedRect(left, y, right - left, customerBoxHeight, 2, 2, 'F')
+  doc.setDrawColor('#FDDBB4')
+  doc.setLineWidth(0.3)
+  doc.roundedRect(left, y, right - left, customerBoxHeight, 2, 2, 'FD')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7)
   doc.setTextColor(muted)
@@ -96,11 +98,11 @@ export function createInvoicePdf(data: InvoicePdfData): Blob {
   }
   y += customerBoxHeight + 9
 
-  doc.setFillColor(primaryColor)
+  doc.setFillColor('#141414')
   doc.rect(left, y, right - left, 9, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7)
-  doc.setTextColor('#ffffff')
+  doc.setTextColor('#D9A62E')
   doc.text('#', left + 4, y + 6)
   doc.text('ITEM DESCRIPTION', left + 14, y + 6)
   doc.text('QTY', 140, y + 6, { align: 'right' })

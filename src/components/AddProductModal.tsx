@@ -188,7 +188,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 w-full py-3.5 bg-[#B08A1C] hover:bg-[#7A5F17] text-white rounded-xl text-[13px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+            className="mt-4 w-full py-3.5 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] hover:bg-black rounded-xl text-[13px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
           >
             {loading ? 'Adding...' : 'Save Product'}
           </button>

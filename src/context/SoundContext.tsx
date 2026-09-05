@@ -40,6 +40,21 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('jj_signature_sounds', JSON.stringify(soundEnabled));
   }, [soundEnabled]);
 
+  // Browsers only allow an AudioContext to start/resume in direct response to
+  // a user gesture. The low-stock alarm fires automatically (right after
+  // login, or on opening the Inventory tab) — by the time that effect runs,
+  // any earlier click has often already fallen outside the gesture window,
+  // so the very first alarm can end up silently muted. Unlocking the shared
+  // context on the *first* tap/click/key anywhere in the app (e.g. typing
+  // into the login form, before Dashboard even mounts) means it's already
+  // running well before an automatic alarm ever tries to play.
+  useEffect(() => {
+    const unlock = () => { getAudioContext() }
+    const events: (keyof DocumentEventMap)[] = ['pointerdown', 'keydown', 'touchstart']
+    events.forEach(evt => document.addEventListener(evt, unlock, { passive: true }))
+    return () => { events.forEach(evt => document.removeEventListener(evt, unlock)) }
+  }, []);
+
   const play = (type: SoundType) => {
     if (!soundEnabled) return;
 
@@ -78,7 +93,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         osc.frequency.setValueAtTime(800, now + 0.1);
         osc.frequency.setValueAtTime(600, now + 0.2);
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
         osc.start(now);
         osc.stop(now + 0.3);
@@ -93,19 +108,38 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         osc.start(now);
         osc.stop(now + 0.6);
       } else if (type === 'buzzer') {
-        // Urgent two-tone siren, loud and unmistakable — used for the
+        // Urgent two-tone siren, as loud as Web Audio allows — used for the
         // persistent low-stock alarm, distinct from the short 'alert' beep.
+        // A second oscillator one octave up (through its own gain, summed
+        // into the same destination) makes it read as louder and more
+        // piercing than a single tone at max gain would alone.
         osc.type = 'square';
         osc.frequency.setValueAtTime(880, now);
         osc.frequency.setValueAtTime(660, now + 0.15);
         osc.frequency.setValueAtTime(880, now + 0.3);
         osc.frequency.setValueAtTime(660, now + 0.45);
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.35, now + 0.03);
-        gain.gain.setValueAtTime(0.35, now + 0.55);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+        gain.gain.linearRampToValueAtTime(0.9, now + 0.02);
+        gain.gain.setValueAtTime(0.9, now + 0.55);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
         osc.start(now);
-        osc.stop(now + 0.65);
+        osc.stop(now + 0.7);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(1760, now);
+        osc2.frequency.setValueAtTime(1320, now + 0.15);
+        osc2.frequency.setValueAtTime(1760, now + 0.3);
+        osc2.frequency.setValueAtTime(1320, now + 0.45);
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.linearRampToValueAtTime(0.5, now + 0.02);
+        gain2.gain.setValueAtTime(0.5, now + 0.55);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+        osc2.start(now);
+        osc2.stop(now + 0.7);
       }
     } catch (e) {
       console.warn('Audio API not supported or user not interacted yet.', e);

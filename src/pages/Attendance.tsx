@@ -151,10 +151,10 @@ export default function Attendance() {
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar">
         {(['today', 'report', 'staff'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-colors ${tab === t ? 'bg-[#B08A1C] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
+            className={`shrink-0 px-3 sm:px-4 h-10 rounded-xl font-bold text-[13px] sm:text-sm whitespace-nowrap transition-colors ${tab === t ? 'bg-[#B08A1C] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
             {t === 'today' ? "Today's Attendance" : t === 'report' ? 'Monthly Report' : 'Staff Management'}
           </button>
         ))}
@@ -179,75 +179,122 @@ export default function Attendance() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
-                  <tr>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Staff Member</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Role</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-green-700">Clock In</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-red-600">Clock Out</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Override Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={5} className="text-center p-8 text-[#6B7280] font-bold">Loading...</td></tr>
-                  ) : activeStaff.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center p-8 text-[#6B7280] font-bold">No active staff. Add staff in Staff Management tab.</td></tr>
-                  ) : activeStaff.map(member => {
-                    const clk = clockMap[member.id]
-                    const status = attendanceMap[member.id]
-                    return (
-                      <tr key={member.id} className="border-b border-[#FDDBB4]/30 hover:bg-[#FAFAFA]">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] flex items-center justify-center font-black text-sm shrink-0 uppercase">{member.name.charAt(0)}</div>
-                            <span className="font-bold text-[#111111] text-sm">{member.name}</span>
+          {loading ? (
+            <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">Loading...</p>
+          ) : activeStaff.length === 0 ? (
+            <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">No active staff. Add staff in Staff Management tab.</p>
+          ) : (
+            <>
+              {/* Mobile card list */}
+              <div className="space-y-3 md:hidden">
+                {activeStaff.map(member => {
+                  const clk = clockMap[member.id]
+                  const status = attendanceMap[member.id]
+                  return (
+                    <div key={member.id} className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 p-3.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] flex items-center justify-center font-black text-sm shrink-0 uppercase">{member.name.charAt(0)}</div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#111111] text-sm truncate">{member.name}</p>
+                            <p className="text-[11px] text-[#6B7280]">{member.role}</p>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-[#374151]">{member.role}</td>
-                        <td className="px-4 py-3">
-                          {clk?.clock_in ? (
-                            <span className="flex items-center gap-1 text-sm font-black text-green-700">
-                              <LogIn size={13} />{formatTime(clk.clock_in)}
-                            </span>
-                          ) : <span className="text-[#9BAB9A] text-xs">—</span>}
-                        </td>
-                        <td className="px-4 py-3">
-                          {clk?.clock_out ? (
-                            <span className="flex items-center gap-1 text-sm font-black text-red-600">
-                              <LogOut size={13} />{formatTime(clk.clock_out)}
-                            </span>
-                          ) : <span className="text-[#9BAB9A] text-xs">—</span>}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-1.5 flex-wrap">
-                            {['present', 'absent', 'half-day', 'leave'].map(s => {
-                              const isSelected = status === s
-                              let colorClass = 'bg-gray-50 text-[#6B7280] border-gray-200 hover:bg-gray-100'
-                              if (isSelected) {
-                                if (s === 'present') colorClass = 'bg-green-100 text-green-700 border-green-200 shadow-sm'
-                                else if (s === 'absent') colorClass = 'bg-red-100 text-red-700 border-red-200 shadow-sm'
-                                else colorClass = 'bg-orange-100 text-orange-700 border-orange-200 shadow-sm'
-                              }
-                              return (
-                                <button key={s} onClick={() => void markAttendance(member.id, s)} disabled={dbError}
-                                  className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-50 ${colorClass}`}>
-                                  {s.replace('-', ' ')}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </td>
+                        </div>
+                        <div className="shrink-0 text-right text-[11px] font-bold">
+                          {clk?.clock_in ? <span className="flex items-center gap-1 text-green-700"><LogIn size={11} />{formatTime(clk.clock_in)}</span> : <span className="text-[#9BAB9A]">In —</span>}
+                          {clk?.clock_out ? <span className="flex items-center gap-1 text-red-600 mt-0.5"><LogOut size={11} />{formatTime(clk.clock_out)}</span> : <span className="text-[#9BAB9A] block mt-0.5">Out —</span>}
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-4 gap-1.5">
+                        {['present', 'absent', 'half-day', 'leave'].map(s => {
+                          const isSelected = status === s
+                          let colorClass = 'bg-gray-50 text-[#6B7280] border-gray-200'
+                          if (isSelected) {
+                            if (s === 'present') colorClass = 'bg-green-100 text-green-700 border-green-200'
+                            else if (s === 'absent') colorClass = 'bg-red-100 text-red-700 border-red-200'
+                            else colorClass = 'bg-orange-100 text-orange-700 border-orange-200'
+                          }
+                          return (
+                            <button key={s} onClick={() => void markAttendance(member.id, s)} disabled={dbError}
+                              className={`h-9 rounded-lg border text-[9px] font-black uppercase tracking-tight transition-all disabled:opacity-50 ${colorClass}`}>
+                              {s === 'half-day' ? 'Half' : s}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
+                      <tr>
+                        <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Staff Member</th>
+                        <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Role</th>
+                        <th className="px-4 py-3 text-[11px] font-black uppercase text-green-700">Clock In</th>
+                        <th className="px-4 py-3 text-[11px] font-black uppercase text-red-600">Clock Out</th>
+                        <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Override Status</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    </thead>
+                    <tbody>
+                      {activeStaff.map(member => {
+                        const clk = clockMap[member.id]
+                        const status = attendanceMap[member.id]
+                        return (
+                          <tr key={member.id} className="border-b border-[#FDDBB4]/30 hover:bg-[#FAFAFA]">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] flex items-center justify-center font-black text-sm shrink-0 uppercase">{member.name.charAt(0)}</div>
+                                <span className="font-bold text-[#111111] text-sm">{member.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-[#374151]">{member.role}</td>
+                            <td className="px-4 py-3">
+                              {clk?.clock_in ? (
+                                <span className="flex items-center gap-1 text-sm font-black text-green-700">
+                                  <LogIn size={13} />{formatTime(clk.clock_in)}
+                                </span>
+                              ) : <span className="text-[#9BAB9A] text-xs">—</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              {clk?.clock_out ? (
+                                <span className="flex items-center gap-1 text-sm font-black text-red-600">
+                                  <LogOut size={13} />{formatTime(clk.clock_out)}
+                                </span>
+                              ) : <span className="text-[#9BAB9A] text-xs">—</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-1.5 flex-wrap">
+                                {['present', 'absent', 'half-day', 'leave'].map(s => {
+                                  const isSelected = status === s
+                                  let colorClass = 'bg-gray-50 text-[#6B7280] border-gray-200 hover:bg-gray-100'
+                                  if (isSelected) {
+                                    if (s === 'present') colorClass = 'bg-green-100 text-green-700 border-green-200 shadow-sm'
+                                    else if (s === 'absent') colorClass = 'bg-red-100 text-red-700 border-red-200 shadow-sm'
+                                    else colorClass = 'bg-orange-100 text-orange-700 border-orange-200 shadow-sm'
+                                  }
+                                  return (
+                                    <button key={s} onClick={() => void markAttendance(member.id, s)} disabled={dbError}
+                                      className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-50 ${colorClass}`}>
+                                      {s.replace('-', ' ')}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

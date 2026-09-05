@@ -164,7 +164,7 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
                 </div>
               </div>
               <button type="submit" disabled={editLoading}
-                className="mt-4 w-full py-3.5 bg-[#B08A1C] hover:bg-[#7A5F17] text-white rounded-xl text-[13px] font-black uppercase tracking-wider transition-colors disabled:opacity-50">
+                className="mt-4 w-full py-3.5 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] hover:bg-black rounded-xl text-[13px] font-black uppercase tracking-wider transition-colors disabled:opacity-50">
                 {editLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </form>
@@ -191,7 +191,7 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
               <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                 {categories.map(cat => (
                   <button key={cat} onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeCategory === cat ? 'bg-[#B08A1C] text-white' : 'bg-[#FAFAFA] text-[#374151] hover:bg-[#F9FAFB] border border-[#FDDBB4]/60'}`}>
+                    className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeCategory === cat ? 'bg-[#141414] text-[#D9A62E]' : 'bg-[#FAFAFA] text-[#374151] hover:bg-[#F9FAFB] border border-[#FDDBB4]/60'}`}>
                     {cat}
                   </button>
                 ))}

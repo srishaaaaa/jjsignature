@@ -1,5 +1,5 @@
 import React from 'react'
-import { BRAND_ADDRESS, BRAND_EN, BRAND_LOGO, BRAND_PHONE_DISPLAY } from '../lib/brand'
+import { BRAND_ADDRESS, BRAND_EMAIL, BRAND_EN, BRAND_LOGO, BRAND_PHONE_DISPLAY } from '../lib/brand'
 import { formatCurrency, formatQuantityDisplay, normalizeStructuredOrderItem, formatInvoiceNo } from '../lib/retail'
 import { formatPhoneDisplay } from '../lib/phone'
 
@@ -92,13 +92,14 @@ export const Invoice: React.FC<InvoiceProps> = ({
         <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginTop: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           INVOICE: #{formattedInvoiceNo}
         </div>
-        <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span>📞 {BRAND_PHONE_DISPLAY}</span>
+          <span>✉️ {BRAND_EMAIL}</span>
         </div>
         <div
           style={{
-            display: 'inline-block', marginTop: 10, padding: '3px 12px', borderRadius: 99,
-            background: statusColor + '18', color: statusColor,
+            display: 'inline-block', marginTop: 10, padding: '3px 14px', borderRadius: 99,
+            background: '#fff', color: statusColor, border: `1.5px solid ${statusColor}`,
             fontSize: 10, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase',
           }}
         >
@@ -118,7 +119,7 @@ export const Invoice: React.FC<InvoiceProps> = ({
             </>
           )}
         </div>
-        <div style={{ minWidth: 0, padding: '12px 14px', borderRadius: 10, background: '#FFF3E8', overflowWrap: 'anywhere' }}>
+        <div style={{ minWidth: 0, padding: '12px 14px', borderRadius: 10, background: '#FFF3E8', border: '1px solid #FDDBB4', overflowWrap: 'anywhere' }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Customer</div>
           <div style={{ fontSize: 9, fontWeight: 800, color: '#888', textTransform: 'uppercase', letterSpacing: 0.7, marginTop: 6 }}>Customer Name</div>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#1a1a2e', lineHeight: 1.35, wordBreak: 'break-word' }}>{customerName || 'Walk-in Customer'}</div>
@@ -136,12 +137,12 @@ export const Invoice: React.FC<InvoiceProps> = ({
       <div className="w-full overflow-x-auto">
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 320 }}>
           <thead>
-            <tr style={{ background: '#f3f8f3', borderRadius: 8 }}>
-              <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#B08A1C', textTransform: 'uppercase', letterSpacing: 0.8, width: 28 }}>#</th>
-              <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#B08A1C', textTransform: 'uppercase', letterSpacing: 0.8 }}>Product</th>
-              <th style={{ padding: '8px 10px', textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#B08A1C', textTransform: 'uppercase', letterSpacing: 0.8, width: 45 }}>Qty</th>
-              <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#B08A1C', textTransform: 'uppercase', letterSpacing: 0.8, width: 75 }}>Rate</th>
-              <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#B08A1C', textTransform: 'uppercase', letterSpacing: 0.8, width: 85 }}>Amount</th>
+            <tr style={{ background: '#141414' }}>
+              <th style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#D9A62E', textTransform: 'uppercase', letterSpacing: 0.8, width: 28 }}>#</th>
+              <th style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#D9A62E', textTransform: 'uppercase', letterSpacing: 0.8 }}>Item Description</th>
+              <th style={{ padding: '9px 10px', textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#D9A62E', textTransform: 'uppercase', letterSpacing: 0.8, width: 45 }}>Qty</th>
+              <th style={{ padding: '9px 10px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#D9A62E', textTransform: 'uppercase', letterSpacing: 0.8, width: 75 }}>Rate</th>
+              <th style={{ padding: '9px 10px', textAlign: 'right', fontSize: 10, fontWeight: 800, color: '#D9A62E', textTransform: 'uppercase', letterSpacing: 0.8, width: 85 }}>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -231,7 +232,7 @@ export const Invoice: React.FC<InvoiceProps> = ({
           display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#B08A1C' }}>Thank you for shopping!</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: '#B08A1C' }}>Thank you for shopping at {BRAND_EN}!</div>
         {onPrintReceipt && (
           <button
             type="button"

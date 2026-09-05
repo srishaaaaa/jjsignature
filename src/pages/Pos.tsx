@@ -898,13 +898,13 @@ export default function Pos(props: PosProps = {}) {
           <div className="grid grid-cols-2 bg-white rounded-xl border border-[#FDDBB4]/60 p-1 shadow-sm flex-1 min-[480px]:flex-none">
             <button
               onClick={() => setOrdermode('offline')}
-              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'offline' ? 'bg-[#B08A1C] text-white' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
+              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'offline' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
             >
               Offline
             </button>
             <button
               onClick={() => setOrdermode('online')}
-              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'online' ? 'bg-[#B08A1C] text-white' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
+              className={`min-h-[44px] px-4 py-2 rounded-lg text-[12px] md:text-[11px] font-black tracking-wider uppercase transition-colors ${ordermode === 'online' ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
             >
               Online
             </button>
@@ -1019,7 +1019,7 @@ export default function Pos(props: PosProps = {}) {
                 </button>
                 <button
                   onClick={() => setAddProductOpen(true)}
-                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg bg-[#B08A1C] text-white text-[12px] md:text-[11px] font-black hover:bg-[#7A5F17] transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
+                  className="min-h-[44px] w-full md:w-auto px-3 py-2 rounded-lg bg-[#141414] border border-[#D9A62E] text-[#D9A62E] text-[12px] md:text-[11px] font-black hover:bg-black transition-colors flex items-center justify-center gap-1.5 text-center md:flex-1"
                 >
                   <Plus size={12} /> ADD TO CATALOG
                 </button>
