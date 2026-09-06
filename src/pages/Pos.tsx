@@ -1195,15 +1195,17 @@ export default function Pos(props: PosProps = {}) {
               <div>
                 <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1">Manual Discount</label>
                 <div className="flex gap-2">
-                  <Select
-                    size="sm"
-                    value={manualDiscountType}
-                    onChange={e => setManualDiscountType(e.target.value as 'flat'|'percent')}
-                    className="w-16 shrink-0"
-                  >
-                    <option value="flat">₹</option>
-                    <option value="percent">%</option>
-                  </Select>
+                  <div className="relative h-9 w-16 shrink-0">
+                    <select
+                      value={manualDiscountType}
+                      onChange={e => setManualDiscountType(e.target.value as 'flat'|'percent')}
+                      className="h-9 w-16 appearance-none rounded-xl border border-[#FDDBB4]/60 bg-white pl-3 pr-7 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                    >
+                      <option value="flat">₹</option>
+                      <option value="percent">%</option>
+                    </select>
+                    <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#374151]" />
+                  </div>
                   <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     size="sm"
@@ -1222,15 +1224,17 @@ export default function Pos(props: PosProps = {}) {
 
               {billGstEnabled && (
                 <div className="flex gap-2">
-                  <Select
-                    size="sm"
-                    value={gstType}
-                    onChange={e => setGstType(e.target.value as 'flat'|'percent')}
-                    className="w-16 shrink-0"
-                  >
-                    <option value="percent">%</option>
-                    <option value="flat">₹</option>
-                  </Select>
+                  <div className="relative h-9 w-16 shrink-0">
+                    <select
+                      value={gstType}
+                      onChange={e => setGstType(e.target.value as 'flat'|'percent')}
+                      className="h-9 w-16 appearance-none rounded-xl border border-[#FDDBB4]/60 bg-white pl-3 pr-7 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                    >
+                      <option value="percent">%</option>
+                      <option value="flat">₹</option>
+                    </select>
+                    <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#374151]" />
+                  </div>
                   <Input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     size="sm"
