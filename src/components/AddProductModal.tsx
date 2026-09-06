@@ -97,16 +97,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden border border-[#FDDBB4]/40">
+      <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[#FDDBB4]/40">
 
-        <div className="flex items-center justify-between p-6 border-b border-[#FDDBB4]/40 bg-[#F9FAFB]">
+        <div className="shrink-0 flex items-center justify-between p-6 border-b border-[#FDDBB4]/40 bg-[#F9FAFB]">
           <h2 className="text-xl font-black text-[#111111]">Add to Catalog</h2>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-black/5 text-[#374151]">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto p-6 flex flex-col gap-4">
           {error && <div className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-xl">{error}</div>}
 
           <div>
