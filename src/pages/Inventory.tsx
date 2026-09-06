@@ -222,26 +222,22 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
     <div className="space-y-5">
       {/* Filter + Export bar */}
       <div className="flex flex-wrap items-center gap-2 bg-white p-3 rounded-2xl shadow-sm border border-[#FDDBB4]/60">
-        <div className="flex flex-wrap gap-2">
-          {(['all', 'today', 'week', 'month', 'custom'] as DatePreset[]).map(p => (
-            <button key={p} onClick={() => applyPreset(p)}
-              className={`px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-colors ${datePreset === p ? 'bg-[#141414] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'}`}>
-              {p === 'all' ? 'All Time' : p === 'today' ? 'Today' : p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : 'Custom'}
-            </button>
-          ))}
-        </div>
+        {(['all', 'today', 'week', 'month', 'custom'] as DatePreset[]).map(p => (
+          <button key={p} onClick={() => applyPreset(p)}
+            className={`px-3.5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-colors ${datePreset === p ? 'bg-[#141414] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'}`}>
+            {p === 'all' ? 'All Time' : p === 'today' ? 'Today' : p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : 'Custom'}
+          </button>
+        ))}
         <button onClick={() => setRefreshTick(t => t + 1)} title="Refresh"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
+          className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
           <RefreshCw size={15} />
         </button>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <button onClick={downloadCSV} className="flex items-center gap-2 border border-emerald-300 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl text-[12px] font-black hover:bg-emerald-100 transition-colors">
-            <Download size={14} /> Export Snapshot CSV
-          </button>
-          <button onClick={downloadMovementsCSV} className="flex items-center gap-2 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-4 py-2 rounded-xl text-[12px] font-black hover:bg-black transition-colors">
-            <Download size={14} /> Export Movements CSV
-          </button>
-        </div>
+        <button onClick={downloadCSV} className="sm:ml-auto flex items-center gap-2 border border-emerald-300 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl text-[12px] font-black hover:bg-emerald-100 transition-colors">
+          <Download size={14} /> Export Snapshot CSV
+        </button>
+        <button onClick={downloadMovementsCSV} className="flex items-center gap-2 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-4 py-2 rounded-xl text-[12px] font-black hover:bg-black transition-colors">
+          <Download size={14} /> Export Movements CSV
+        </button>
         {datePreset === 'custom' && (
           <div className="w-full flex flex-wrap gap-3 items-center pt-1">
             <div className="flex items-center gap-2">
@@ -272,7 +268,7 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#9CA3AF] mb-0.5 truncate">{c.label}</p>
-              <p className="text-[15px] sm:text-lg font-black text-[#111111] truncate">{c.value}</p>
+              <p className="text-[12px] sm:text-lg font-black text-[#111111] leading-tight break-words">{c.value}</p>
             </div>
           </div>
         ))}
@@ -754,13 +750,13 @@ export default function Inventory() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm p-3">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="space-y-3 bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm p-3">
+            <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SKU name, category..."
                 className="w-full pl-9 pr-4 py-2.5 bg-[#FAFAFA] border border-[#FDDBB4]/40 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-nowrap items-stretch gap-1.5">
               {([
                 ['all', `All (${activeProducts.length})`],
                 ['ok', `In Stock (${inStockCount})`],
@@ -768,20 +764,20 @@ export default function Inventory() {
                 ['out', `Out of Stock (${outCount})`],
               ] as const).map(([f, label]) => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`px-3.5 py-2 rounded-xl text-[12px] font-black whitespace-nowrap transition-colors ${
+                  className={`flex-1 min-w-0 px-1.5 py-1.5 rounded-xl border text-[10.5px] leading-tight font-black text-center transition-colors ${
                     filter === f
-                      ? f === 'out' ? 'bg-red-600 text-white' : f === 'low' ? 'bg-amber-500 text-white' : f === 'ok' ? 'bg-emerald-600 text-white' : 'bg-[#141414] text-white'
-                      : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'
+                      ? f === 'out' ? 'bg-red-600 border-red-600 text-white' : f === 'low' ? 'bg-amber-500 border-amber-500 text-white' : f === 'ok' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-[#141414] border-[#141414] text-white'
+                      : f === 'out' ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : f === 'low' ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100' : f === 'ok' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-white border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'
                   }`}>
                   {label}
                 </button>
               ))}
+              <button onClick={() => { void fetchProducts(); void fetchCategories() }}
+                title="Refresh"
+                className="shrink-0 flex h-auto w-9 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
+                <RefreshCw size={15} />
+              </button>
             </div>
-            <button onClick={() => { void fetchProducts(); void fetchCategories() }}
-              title="Refresh"
-              className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
-              <RefreshCw size={16} />
-            </button>
           </div>
 
           <div className="bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
@@ -1090,38 +1086,38 @@ export default function Inventory() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
               {/* Header */}
-              <div className="flex shrink-0 items-center justify-between gap-3 bg-[#141414] px-5 py-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#D9A62E]">
-                    <SlidersHorizontal size={18} />
+              <div className="flex shrink-0 items-center justify-between gap-2.5 bg-[#141414] px-4 py-3.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#D9A62E]">
+                    <SlidersHorizontal size={16} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-white font-black text-[14px] leading-tight truncate">Adjust Inventory Stock ({BRAND_EN})</p>
-                    <p className="text-[#D9A62E] text-[11px] font-semibold leading-tight mt-0.5">Restock, remove stock, or reconcile physical count</p>
+                    <p className="text-white font-black text-[12.5px] sm:text-[14px] leading-tight">Adjust Inventory Stock ({BRAND_EN})</p>
+                    <p className="text-[#D9A62E] text-[10.5px] sm:text-[11px] font-semibold leading-tight mt-0.5">Restock, remove stock, or reconcile physical count</p>
                   </div>
                 </div>
-                <button onClick={() => setAdjustModal(null)} className="shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
-                  <X size={16} />
+                <button onClick={() => setAdjustModal(null)} className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
+                  <X size={15} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
                 {/* Product box */}
-                <div className="rounded-2xl border border-[#FDDBB4] bg-[#FFF8F2] p-4">
+                <div className="rounded-xl border border-[#FDDBB4] bg-[#FFF8F2] p-2.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#B08A1C]">
-                        <Package size={12} /> Product
+                      <p className="flex items-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider text-[#B08A1C]">
+                        <Package size={11} /> Product
                       </p>
-                      <p className="mt-1 font-black text-[#111111] break-words">{adjustModal.product.name}</p>
-                      <span className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-[#FDDBB4]/50 text-[#7A5F17] text-[11px] font-bold">
+                      <p className="mt-0.5 font-black text-[13px] sm:text-[14px] text-[#111111] break-words">{adjustModal.product.name}</p>
+                      <span className="mt-1 inline-block px-2 py-0.5 rounded-md bg-[#FDDBB4]/50 text-[#7A5F17] text-[10.5px] font-bold">
                         {adjustModal.product.category || 'Uncategorised'}
                       </span>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-[#9CA3AF]">Current Stock</p>
-                      <p className={`text-2xl font-black ${getStatus(adjustModal.product) === 'out' ? 'text-red-600' : getStatus(adjustModal.product) === 'low' ? 'text-orange-600' : 'text-[#111111]'}`}>
-                        {adjustModal.product.stock_quantity} <span className="text-[13px] font-bold text-[#9CA3AF]">units</span>
+                      <p className="text-[9.5px] font-black uppercase tracking-wider text-[#9CA3AF]">Current Stock</p>
+                      <p className={`text-lg sm:text-2xl font-black leading-tight ${getStatus(adjustModal.product) === 'out' ? 'text-red-600' : getStatus(adjustModal.product) === 'low' ? 'text-orange-600' : 'text-[#111111]'}`}>
+                        {adjustModal.product.stock_quantity} <span className="text-[11px] font-bold text-[#9CA3AF]">units</span>
                       </p>
                     </div>
                   </div>
@@ -1129,20 +1125,20 @@ export default function Inventory() {
 
                 {/* Adjustment type selector */}
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-[#374151] mb-2">Select Adjustment Type *</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#374151] mb-1.5">Select Adjustment Type *</label>
+                  <div className="grid grid-cols-4 gap-1.5">
                     {(Object.keys(ADJUST_TYPE_META) as AdjustModal['adjustType'][]).map(type => {
                       const m = ADJUST_TYPE_META[type]
                       const selected = adjustModal.adjustType === type
                       return (
                         <button key={type} type="button"
                           onClick={() => setAdjustModal(prev => prev ? { ...prev, adjustType: type, qty: '1' } : prev)}
-                          className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-center transition-colors ${selected ? `${m.border} ${m.bg}` : 'border-[#E5E7EB] bg-white hover:border-[#D1D5DB]'}`}>
-                          <span className={`flex h-8 w-8 items-center justify-center rounded-full ${selected ? m.iconOn : m.iconOff}`}>
-                            <m.Icon size={15} />
+                          className={`flex flex-col items-center gap-0.5 rounded-lg border-2 px-1 py-1.5 text-center transition-colors ${selected ? `${m.border} ${m.bg}` : 'border-[#E5E7EB] bg-white hover:border-[#D1D5DB]'}`}>
+                          <span className={`flex h-6 w-6 items-center justify-center rounded-full ${selected ? m.iconOn : m.iconOff}`}>
+                            <m.Icon size={11} />
                           </span>
-                          <span className="text-[12px] font-black text-[#111111] leading-tight">{m.label}</span>
-                          <span className="text-[10px] font-bold text-[#9CA3AF] leading-tight">{m.sublabel}</span>
+                          <span className="text-[9.5px] font-black text-[#111111] leading-tight">{m.label}</span>
+                          <span className="text-[8.5px] font-bold text-[#9CA3AF] leading-tight">{m.sublabel}</span>
                         </button>
                       )
                     })}
@@ -1150,33 +1146,33 @@ export default function Inventory() {
                 </div>
 
                 {/* Quantity input */}
-                <div className={`rounded-2xl border ${meta.panelBorder} ${meta.panelBg} p-4`}>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-[#374151] mb-2">
+                <div className={`rounded-xl border ${meta.panelBorder} ${meta.panelBg} p-2.5`}>
+                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#374151] mb-1.5">
                     {adjustModal.adjustType === 'reconciliation' ? 'New Exact Stock Count *' : `Quantity to ${meta.isAddition ? 'Add' : 'Deduct'} (${meta.label}) *`}
                   </label>
                   {adjustModal.adjustType === 'reconciliation' ? (
                     <input type="number" min="0" autoFocus value={adjustModal.qty} onChange={e => setAdjustModal(m => m ? { ...m, qty: e.target.value } : m)}
                       placeholder={`Current: ${adjustModal.product.stock_quantity}`}
-                      className="w-full h-14 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl text-center text-2xl font-black text-[#111111] outline-none focus:border-[#B08A1C]" />
+                      className="w-full h-10 px-4 bg-white border border-[#FDDBB4]/60 rounded-xl text-center text-lg font-black text-[#111111] outline-none focus:border-[#B08A1C]" />
                   ) : (
                     <>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => bumpAdjustQty(-1)}
-                          className="shrink-0 flex h-14 w-14 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]">
-                          <Minus size={18} />
+                          className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]">
+                          <Minus size={15} />
                         </button>
                         <input type="number" min="0" value={adjustModal.qty} onChange={e => setAdjustModal(m => m ? { ...m, qty: e.target.value } : m)}
-                          className={`min-w-0 flex-1 h-14 px-4 bg-white border-2 ${meta.border} rounded-xl text-center text-2xl font-black text-[#111111] outline-none`} />
+                          className={`min-w-0 flex-1 h-10 px-4 bg-white border-2 ${meta.border} rounded-xl text-center text-lg font-black text-[#111111] outline-none`} />
                         <button type="button" onClick={() => bumpAdjustQty(1)}
-                          className="shrink-0 flex h-14 w-14 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]">
-                          <Plus size={18} />
+                          className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]">
+                          <Plus size={15} />
                         </button>
                       </div>
-                      <div className="mt-3 flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-black uppercase text-[#9CA3AF] mr-1">Quick Add:</span>
+                      <div className="mt-2 flex items-center gap-1 flex-nowrap overflow-x-auto">
+                        <span className="shrink-0 text-[9.5px] font-black uppercase text-[#9CA3AF] mr-0.5">Quick:</span>
                         {[1, 5, 10, 25, 50, 100].map(preset => (
                           <button key={preset} type="button" onClick={() => setAdjustModal(m => m ? { ...m, qty: String(preset) } : m)}
-                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition-colors ${Number(adjustModal.qty) === preset ? `${meta.accentBg} text-white` : 'bg-white border border-[#E5E7EB] text-[#374151] hover:bg-[#F9FAFB]'}`}>
+                            className={`shrink-0 px-2 py-1 rounded-full border text-[10px] font-black transition-colors ${Number(adjustModal.qty) === preset ? `${meta.accentBg} border-transparent text-white` : 'bg-white border-[#E5E7EB] text-[#374151] hover:bg-[#F9FAFB]'}`}>
                             +{preset}
                           </button>
                         ))}
@@ -1185,20 +1181,20 @@ export default function Inventory() {
                   )}
 
                   {hasEntry && exceedsStock && (
-                    <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-300 bg-red-50 px-3.5 py-2.5">
-                      <AlertTriangle size={14} className="shrink-0 text-red-600" />
-                      <p className="text-[12px] text-red-700 font-bold">
+                    <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2">
+                      <AlertTriangle size={13} className="shrink-0 text-red-600" />
+                      <p className="text-[11px] text-red-700 font-bold">
                         Only {adjustModal.product.stock_quantity} unit{adjustModal.product.stock_quantity === 1 ? '' : 's'} available — cannot deduct {entered}.
                       </p>
                     </div>
                   )}
                   {hasEntry && !exceedsStock && (
-                    <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-[#FDDBB4] bg-white px-3.5 py-2.5">
-                      <p className="text-[12px] text-[#6B7280] font-semibold">
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-[#FDDBB4] bg-white px-3 py-2">
+                      <p className="text-[11px] text-[#6B7280] font-semibold">
                         Current: <span className="font-black text-[#111111]">{adjustModal.product.stock_quantity}</span>
                         {' → '}New Stock: <span className={`font-black ${meta.accentText}`}>{newTotal} units</span>
                       </p>
-                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-black ${change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10.5px] font-black ${change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
                         {change >= 0 ? '+' : ''}{change}
                       </span>
                     </div>
@@ -1207,20 +1203,20 @@ export default function Inventory() {
 
                 {/* Note */}
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-[#374151] mb-1.5">Adjustment Note / Reason Description (Optional)</label>
+                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#374151] mb-1">Adjustment Note / Reason Description (Optional)</label>
                   <input type="text" value={adjustModal.note} onChange={e => setAdjustModal(m => m ? { ...m, note: e.target.value } : m)}
-                    className="w-full border border-[#E5E7EB] p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]"
+                    className="w-full border border-[#E5E7EB] p-2 rounded-xl text-[13px] font-bold outline-none focus:border-[#B08A1C]"
                     placeholder="e.g. Received new stock shipment / batch delivery" />
                 </div>
 
-                {notice && <p className="text-sm text-red-600 font-bold bg-red-50 p-3 rounded-xl">{notice}</p>}
+                {notice && <p className="text-[13px] text-red-600 font-bold bg-red-50 p-2.5 rounded-xl">{notice}</p>}
               </div>
 
               {/* Footer */}
-              <div className="shrink-0 border-t border-[#E5E7EB] p-4 flex gap-3">
-                <button type="button" onClick={() => { setAdjustModal(null); setNotice('') }} className="flex-1 bg-gray-100 p-3 rounded-xl font-bold text-sm hover:bg-gray-200">Cancel</button>
+              <div className="shrink-0 border-t border-[#E5E7EB] p-3 flex gap-2.5">
+                <button type="button" onClick={() => { setAdjustModal(null); setNotice('') }} className="flex-1 bg-gray-100 p-2.5 rounded-xl font-bold text-sm hover:bg-gray-200">Cancel</button>
                 <button onClick={() => void saveAdjust()} disabled={saving || !hasEntry || exceedsStock}
-                  className="flex-[1.5] flex items-center justify-center gap-2 bg-[#141414] border border-[#D9A62E] text-white p-3 rounded-xl font-bold text-sm hover:bg-black disabled:opacity-50">
+                  className="flex-[1.5] flex items-center justify-center gap-2 bg-[#141414] border border-[#D9A62E] text-white p-2.5 rounded-xl font-bold text-sm hover:bg-black disabled:opacity-50">
                   <CheckCircle2 size={16} />
                   {saving ? 'Saving...' : adjustModal.adjustType === 'reconciliation'
                     ? `Confirm Reconciliation (${hasEntry ? newTotal : '—'} Units)`

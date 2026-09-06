@@ -2161,57 +2161,29 @@ export default function Dashboard() {
                     })
                     return filteredProds.length > 0 ? (
                       <>
-                      <div className="space-y-3 md:hidden">
-                        {filteredProds.slice(0, 50).map((p, i) => (
-                          <div key={`${p.name}-${p.variant || i}`} className="rounded-2xl border border-[#FDDBB4]/30 bg-[#FBFAF6] p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-[13px] font-black text-[#9BAB9A]">#{i + 1}</p>
-                                <p className="text-[16px] font-bold text-[#111111] break-words">{p.name}</p>
-                                <p className="text-[13px] text-[#374151]">{p.variant || 'No variant'}</p>
-                              </div>
-                              <p className="text-[14px] font-black text-emerald-700">{formatCurrency(p.revenue)}</p>
-                            </div>
-                            <div className="mt-3 grid grid-cols-2 gap-3 text-[13px]">
-                              <div>
-                                <p className="text-[#9BAB9A] uppercase text-[11px] font-black">Qty Sold</p>
-                                <p className="font-bold text-[#111111]">{Math.round(p.qty)}</p>
-                              </div>
-                              <div>
-                                <p className="text-[#9BAB9A] uppercase text-[11px] font-black">Bills</p>
-                                <p className="font-bold text-[#111111]">{p.billCount}</p>
-                              </div>
-                              <div>
-                                <p className="text-[#9BAB9A] uppercase text-[11px] font-black">Avg Revenue/Bill</p>
-                                <p className="font-bold text-[#111111]">{formatCurrency(p.billCount > 0 ? p.revenue / p.billCount : 0)}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="hidden md:block overflow-x-auto rounded-xl border border-[#FDDBB4]/30">
-                        <table className="w-full min-w-[580px] text-left text-[12px]">
+                      <div className="overflow-x-auto rounded-xl border border-[#FDDBB4]/30">
+                        <table className="w-full min-w-[640px] text-left text-[12px]">
                           <thead className="bg-[#F9FAFB] text-[10px] uppercase tracking-wider text-[#374151]">
                             <tr>
-                              <th className="px-4 py-2.5 font-black">#</th>
-                              <th className="px-4 py-2.5 font-black">Product</th>
-                              <th className="px-4 py-2.5 font-black">Variant / SKU</th>
-                              <th className="px-4 py-2.5 font-black">Qty Sold</th>
-                              <th className="px-4 py-2.5 font-black">Revenue</th>
-                              <th className="px-4 py-2.5 font-black">Bills</th>
-                              <th className="px-4 py-2.5 font-black">Avg Revenue/Bill</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">#</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Product</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Variant / SKU</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Qty Sold</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Revenue</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Bills</th>
+                              <th className="px-4 py-2.5 font-black whitespace-nowrap">Avg Revenue/Bill</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#FDDBB4]/20">
                             {filteredProds.slice(0, 50).map((p, i) => (
                               <tr key={`${p.name}-${p.variant || i}`} className="hover:bg-[#F9FAFB]/50">
-                                <td className="px-4 py-2 text-[11px] text-[#9BAB9A] font-bold">{i + 1}</td>
-                                <td className="px-4 py-2 font-bold text-[#111111]">{p.name}</td>
-                                <td className="px-4 py-2 text-[#374151]">{p.variant || '-'}</td>
-                                <td className="px-4 py-2 font-bold">{Math.round(p.qty)}</td>
-                                <td className="px-4 py-2 font-bold text-emerald-700">{formatCurrency(p.revenue)}</td>
-                                <td className="px-4 py-2 text-[#374151]">{p.billCount}</td>
-                                <td className="px-4 py-2 font-bold text-[#111111]">{formatCurrency(p.billCount > 0 ? p.revenue / p.billCount : 0)}</td>
+                                <td className="px-4 py-2 text-[11px] text-[#9BAB9A] font-bold whitespace-nowrap">{i + 1}</td>
+                                <td className="px-4 py-2 font-bold text-[#111111] whitespace-nowrap max-w-[180px] truncate">{p.name}</td>
+                                <td className="px-4 py-2 text-[#374151] whitespace-nowrap">{p.variant || '-'}</td>
+                                <td className="px-4 py-2 font-bold whitespace-nowrap">{Math.round(p.qty)}</td>
+                                <td className="px-4 py-2 font-bold text-emerald-700 whitespace-nowrap">{formatCurrency(p.revenue)}</td>
+                                <td className="px-4 py-2 text-[#374151] whitespace-nowrap">{p.billCount}</td>
+                                <td className="px-4 py-2 font-bold text-[#111111] whitespace-nowrap">{formatCurrency(p.billCount > 0 ? p.revenue / p.billCount : 0)}</td>
                               </tr>
                             ))}
                           </tbody>
