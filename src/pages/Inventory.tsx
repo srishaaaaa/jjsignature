@@ -975,7 +975,7 @@ export default function Inventory() {
                     className="w-full pl-8 pr-4 py-2 bg-white border border-[#FDDBB4]/60 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" />
                 </div>
               </div>
-              <div className="overflow-y-auto max-h-[600px] divide-y divide-[#FDDBB4]/30">
+              <div className="overflow-y-auto hide-scrollbar max-h-[600px] divide-y divide-[#FDDBB4]/30">
                 {products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())).map(p => (
                   <div key={String(p.id)} className={`flex items-center justify-between gap-2 px-4 py-3 hover:bg-[#FAFAFA] ${editingProduct?.id === p.id ? 'bg-orange-50 border-l-4 border-[#B08A1C]' : ''}`}>
                     <div className="min-w-0">
@@ -1099,7 +1099,7 @@ export default function Inventory() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+              <div className="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2.5">
                 {/* Product box */}
                 <div className="rounded-xl border border-[#FDDBB4] bg-[#FFF8F2] p-2.5">
                   <div className="flex items-start justify-between gap-3">
@@ -1256,7 +1256,7 @@ export default function Inventory() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            <div className="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-2.5">
               {historyLoading ? (
                 <p className="text-center py-10 text-sm font-bold text-[#6B7280]">Loading...</p>
               ) : historyLogs.length === 0 ? (

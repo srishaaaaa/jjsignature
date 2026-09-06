@@ -1244,7 +1244,7 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="flex-grow flex flex-col overflow-hidden">
-        <div className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
+        <div className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto hide-scrollbar">
         <div className="mx-auto w-full max-w-[1600px]">
 
         {/* ΓöÇΓöÇ ANALYTICS TAB ΓöÇΓöÇ */}
@@ -2834,7 +2834,7 @@ export default function Dashboard() {
                   </span>
                 </div>
 
-                <div className="space-y-2 max-h-[30rem] overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-[30rem] overflow-y-auto hide-scrollbar pr-1">
                   {coupons.map((coupon) => {
                     const isExpired = coupon.expiry_date ? new Date(coupon.expiry_date) < new Date() : false
                     const isExhausted = coupon.usage_limit !== null && coupon.usage_count >= coupon.usage_limit
@@ -2917,19 +2917,19 @@ export default function Dashboard() {
         )}
         
                 {tab === 'inventory' && (
-          <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
             <Inventory />
           </div>
         )}
 
         {tab === 'expenses' && (
-          <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
             <Expenses />
           </div>
         )}
         
         {tab === 'attendance' && (
-          <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
             {role === 'admin' ? <Attendance /> : <StaffPunch embedded={true} />}
           </div>
         )}
@@ -3089,7 +3089,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              <div className="overflow-y-auto p-2 sm:p-5">
+              <div className="overflow-y-auto hide-scrollbar p-2 sm:p-5">
                 <div className="mx-auto max-w-3xl overflow-hidden rounded-xl bg-white shadow-sm">
                   <Invoice
                     invoiceNo={formatInvoiceNo(invoicePreviewOrder.invoice_no || invoicePreviewOrder.id)}

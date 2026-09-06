@@ -54,7 +54,7 @@ export default function LowStockAlarmModal({ items, onAcknowledge }: LowStockAla
             The audible alarm and visual alert will sound until acknowledged.
           </p>
 
-          <div className="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[45vh] overflow-y-auto hide-scrollbar pr-1">
             {items.map(item => (
               <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50/50 px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">

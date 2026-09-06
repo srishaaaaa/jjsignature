@@ -106,7 +106,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto hide-scrollbar p-6 flex flex-col gap-4">
           {error && <div className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-xl">{error}</div>}
 
           <div>

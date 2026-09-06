@@ -976,7 +976,7 @@ export default function Pos(props: PosProps = {}) {
             </div>
 
             {/* Table Body */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 md:space-y-2">
+            <div className="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-3 md:space-y-2">
               {items.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-[#374151]/60">
                   <ShoppingBag size={40} className="mb-3 opacity-20" />
@@ -1143,7 +1143,7 @@ export default function Pos(props: PosProps = {}) {
                   </span>
                 </div>
                 {items.length > 0 && (
-                  <div className="px-3 py-2 bg-[#FAFAFA] space-y-1 border-b border-[#FDDBB4]/40 max-h-[80px] overflow-y-auto">
+                  <div className="px-3 py-2 bg-[#FAFAFA] space-y-1 border-b border-[#FDDBB4]/40 max-h-[80px] overflow-y-auto hide-scrollbar">
                     {items.map(item => (
                 <div key={item.id} className="flex justify-between gap-2 text-[#111111] text-[11px]">
                         <span className="break-words">{item.qty}x {item.name}</span>
@@ -1352,7 +1352,7 @@ export default function Pos(props: PosProps = {}) {
 
       {depositOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4">
-          <form onSubmit={saveDepositOrder} className="max-h-[94vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+          <form onSubmit={saveDepositOrder} className="max-h-[94vh] w-full max-w-lg overflow-y-auto hide-scrollbar rounded-3xl bg-white p-6 shadow-2xl">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[.16em] text-violet-600">Advance payment only</p>
@@ -1363,7 +1363,7 @@ export default function Pos(props: PosProps = {}) {
             </div>
             <div className="mb-4 rounded-2xl bg-violet-50 p-4">
               <div className="flex justify-between text-sm"><span className="font-bold text-violet-700">Order total</span><span className="font-black text-violet-900">{formatCurrency(total)}</span></div>
-              <div className="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-violet-200 pt-2">{items.map(item => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="break-words">{item.qty}× {item.name}</span><span className="font-bold shrink-0">{formatCurrency(item.lineTotal)}</span></div>)}</div>
+              <div className="mt-2 max-h-24 space-y-1 overflow-y-auto hide-scrollbar border-t border-violet-200 pt-2">{items.map(item => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="break-words">{item.qty}× {item.name}</span><span className="font-bold shrink-0">{formatCurrency(item.lineTotal)}</span></div>)}</div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block"><span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-[#6B7280]">Deposit received *</span><input required autoFocus type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} min="0.01" max={Math.max(0, total - 0.01)} step="0.01" value={depositForm.amount} onChange={e => setDepositForm({...depositForm, amount:e.target.value})} className="w-full rounded-xl border px-3 py-2.5 text-sm font-bold outline-none focus:border-violet-600"/></label>
@@ -1382,7 +1382,7 @@ export default function Pos(props: PosProps = {}) {
 
       {depositCreated && (
         <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/55 p-4">
-          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 text-center shadow-2xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto hide-scrollbar rounded-3xl bg-white p-6 text-center shadow-2xl">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">✓</div>
             <p className="mt-4 text-[11px] font-black uppercase tracking-[.16em] text-violet-600">Deposit order saved</p>
             <h3 className="mt-1 text-2xl font-black text-[#111111]">{depositCreated.deposit_id}</h3>

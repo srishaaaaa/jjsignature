@@ -334,7 +334,7 @@ export default function Expenses() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto hide-scrollbar p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-black text-[#111111]">Record Expense</h2>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-gray-100"><X size={18} /></button>
