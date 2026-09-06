@@ -161,8 +161,8 @@ export default function Expenses() {
     <div className="p-4 sm:p-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
-          <Receipt size={24} className="text-[#B08A1C]" />
-          <h2 className="text-[22px] font-black text-[#111111]">Expense Tracker</h2>
+          <Receipt size={20} className="sm:size-6 shrink-0 text-[#B08A1C]" />
+          <h2 className="text-lg sm:text-xl md:text-[22px] font-black text-[#111111]">Expense Tracker</h2>
         </div>
       </div>
 
@@ -194,7 +194,7 @@ export default function Expenses() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280] mb-0.5">{c.label}</p>
-                  <p className="text-[15px] xl:text-[18px] font-black text-[#111111] truncate" title={c.value}>{c.value}</p>
+                  <p className="text-[13px] sm:text-[15px] xl:text-[18px] font-black text-[#111111] truncate" title={c.value}>{c.value}</p>
                 </div>
               </div>
             ))}

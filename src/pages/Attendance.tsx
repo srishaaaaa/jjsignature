@@ -138,7 +138,7 @@ export default function Attendance() {
   return (
     <div className="p-4 sm:p-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-        <h1 className="text-2xl font-black text-[#111111] flex items-center gap-2"><Users size={24} className="text-[#B08A1C]" /> Attendance & Staff</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-black text-[#111111] flex items-center gap-2"><Users size={20} className="sm:size-6 shrink-0 text-[#B08A1C]" /> Attendance & Staff</h1>
       </div>
 
       {dbError && (

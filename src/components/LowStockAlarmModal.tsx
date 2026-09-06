@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { AlertTriangle, Volume2, VolumeX, Package } from 'lucide-react'
 import { useSound } from '../context/SoundContext'
 
@@ -15,19 +15,13 @@ interface LowStockAlarmModalProps {
   onAcknowledge: () => void
 }
 
-const BUZZ_INTERVAL_MS = 1400
-
 export default function LowStockAlarmModal({ items, onAcknowledge }: LowStockAlarmModalProps) {
-  const { play, soundEnabled } = useSound()
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const { soundEnabled, startAlarmLoop, stopAlarmLoop } = useSound()
 
   useEffect(() => {
     if (!soundEnabled) return
-    play('buzzer')
-    intervalRef.current = setInterval(() => play('buzzer'), BUZZ_INTERVAL_MS)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
+    startAlarmLoop()
+    return () => stopAlarmLoop()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundEnabled])
 

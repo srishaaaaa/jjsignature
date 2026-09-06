@@ -703,10 +703,10 @@ export default function Inventory() {
     <div className="p-4 sm:p-6 space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-black text-[#111111] flex items-center gap-2">
-          <Package size={24} className="text-[#B08A1C]" /> Inventory & Products
+        <h1 className="text-lg sm:text-xl md:text-2xl font-black text-[#111111] flex items-center gap-2">
+          <Package size={20} className="sm:size-6 shrink-0 text-[#B08A1C]" /> Inventory & Products
         </h1>
-        <button onClick={() => { void fetchProducts(); void fetchCategories() }} className="flex items-center gap-2 bg-white border border-[#FDDBB4]/60 px-4 py-2 rounded-xl text-sm font-bold text-[#374151] hover:bg-orange-50">
+        <button onClick={() => { void fetchProducts(); void fetchCategories() }} className="flex items-center gap-2 bg-white border border-[#FDDBB4]/60 px-4 h-10 rounded-xl text-[13px] sm:text-sm font-bold text-[#374151] hover:bg-orange-50">
           <RefreshCw size={15} /> Refresh
         </button>
       </div>

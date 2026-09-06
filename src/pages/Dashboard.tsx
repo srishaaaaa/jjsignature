@@ -1785,8 +1785,8 @@ export default function Dashboard() {
         {tab === 'pos_analytics' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-[24px] font-bold text-[#111111]">POS Analytics</h2>
-              <p className="text-[13px] text-[#6B7280]">Real time store & channel insights</p>
+              <h2 className="text-lg sm:text-xl md:text-[24px] font-bold text-[#111111]">POS Analytics</h2>
+              <p className="text-[12px] sm:text-[13px] text-[#6B7280]">Real time store & channel insights</p>
             </div>
 
             <div className="flex flex-col gap-4 border-b border-[#E7E7E7] pb-4 md:flex-row md:items-center md:justify-between">

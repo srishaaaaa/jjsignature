@@ -6,6 +6,8 @@ interface SoundContextType {
   play: (type: SoundType) => void;
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
+  startAlarmLoop: () => void;
+  stopAlarmLoop: () => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -25,6 +27,28 @@ const getAudioContext = (): AudioContext | null => {
     }
     if (sharedAudioCtx.state === 'suspended') void sharedAudioCtx.resume()
     return sharedAudioCtx
+  } catch {
+    return null
+  }
+}
+
+// The low-stock alarm is the one sound that absolutely must be heard, so it
+// doesn't rely on the Web Audio API alone — some strict in-app WebViews
+// (WhatsApp's in particular) keep refusing to unlock an AudioContext even
+// after a real user gesture, silently dropping every oscillator-based beep.
+// A real HTML <audio> element backed by an actual file is unlocked far more
+// reliably: playing (and immediately pausing) it inside a genuine gesture
+// is the standard, broadly-supported trick, and looping a real file has no
+// gaps the way re-triggering an oscillator on a setInterval can.
+let sharedAlarmAudio: HTMLAudioElement | null = null
+const getAlarmAudio = (): HTMLAudioElement | null => {
+  try {
+    if (!sharedAlarmAudio) {
+      sharedAlarmAudio = new Audio('/alarm-buzzer.wav')
+      sharedAlarmAudio.loop = true
+      sharedAlarmAudio.preload = 'auto'
+    }
+    return sharedAlarmAudio
   } catch {
     return null
   }
@@ -58,15 +82,30 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     // are audible even though nothing was heard on this first tap.
     const unlock = () => {
       const ctx = getAudioContext()
-      if (!ctx) return
-      try {
-        const buffer = ctx.createBuffer(1, 1, 22050)
-        const source = ctx.createBufferSource()
-        source.buffer = buffer
-        source.connect(ctx.destination)
-        source.start(0)
-      } catch {
-        // ignore — best-effort unlock
+      if (ctx) {
+        try {
+          const buffer = ctx.createBuffer(1, 1, 22050)
+          const source = ctx.createBufferSource()
+          source.buffer = buffer
+          source.connect(ctx.destination)
+          source.start(0)
+        } catch {
+          // ignore — best-effort unlock
+        }
+      }
+
+      const audio = getAlarmAudio()
+      if (audio) {
+        const playAttempt = audio.play()
+        if (playAttempt && typeof playAttempt.then === 'function') {
+          playAttempt.then(() => {
+            audio.pause()
+            audio.currentTime = 0
+          }).catch(() => {
+            // Autoplay still refused outside a gesture window — later
+            // startAlarmLoop() calls will just try again directly.
+          })
+        }
       }
     }
     const events: (keyof DocumentEventMap)[] = ['pointerdown', 'keydown', 'touchstart', 'touchend', 'click']
@@ -165,8 +204,27 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const startAlarmLoop = () => {
+    if (!soundEnabled) return;
+    const audio = getAlarmAudio();
+    if (!audio) return;
+    audio.currentTime = 0;
+    void audio.play().catch(() => {
+      // If this specific call is still refused (e.g. the very first alarm
+      // fires before any gesture at all has happened yet), the oscillator
+      // path below at least gives a chance of an audible fallback.
+      play('buzzer');
+    });
+  };
+
+  const stopAlarmLoop = () => {
+    if (!sharedAlarmAudio) return;
+    sharedAlarmAudio.pause();
+    sharedAlarmAudio.currentTime = 0;
+  };
+
   return (
-    <SoundContext.Provider value={{ play, soundEnabled, setSoundEnabled }}>
+    <SoundContext.Provider value={{ play, soundEnabled, setSoundEnabled, startAlarmLoop, stopAlarmLoop }}>
       {children}
     </SoundContext.Provider>
   );
