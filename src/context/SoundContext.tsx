@@ -80,7 +80,15 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     // silent buffer synchronously inside the gesture handler forces that
     // audio route open, so later automatic sounds (the low-stock alarm)
     // are audible even though nothing was heard on this first tap.
+    // Only the very first gesture needs to do the real work — once the
+    // audio route is open it stays open, so re-running the play/pause dance
+    // on every subsequent tap or keystroke (e.g. while typing a password)
+    // was pure risk for no benefit.
+    let unlocked = false
     const unlock = () => {
+      if (unlocked) return
+      unlocked = true
+
       const ctx = getAudioContext()
       if (ctx) {
         try {
@@ -96,15 +104,25 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
       const audio = getAlarmAudio()
       if (audio) {
+        // Muted, because play() is asynchronous — actual audio can start
+        // rendering before the .then() callback below runs pause(), which
+        // was audible as a brief stray beep on the first tap/keystroke
+        // anywhere in the app (e.g. right after opening the site link, or
+        // while typing login credentials).
+        audio.muted = true
         const playAttempt = audio.play()
         if (playAttempt && typeof playAttempt.then === 'function') {
           playAttempt.then(() => {
             audio.pause()
             audio.currentTime = 0
+            audio.muted = false
           }).catch(() => {
             // Autoplay still refused outside a gesture window — later
             // startAlarmLoop() calls will just try again directly.
+            audio.muted = false
           })
+        } else {
+          audio.muted = false
         }
       }
     }
