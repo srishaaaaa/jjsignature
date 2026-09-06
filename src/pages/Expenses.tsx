@@ -159,10 +159,13 @@ export default function Expenses() {
 
   return (
     <div className="p-4 sm:p-6 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-        <div className="flex items-center gap-3">
-          <Receipt size={20} className="sm:size-6 shrink-0 text-[#B08A1C]" />
-          <h2 className="text-lg sm:text-xl md:text-[22px] font-black text-[#111111]">Expense Tracker</h2>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div className="flex items-start gap-3">
+          <Receipt size={20} className="sm:size-6 shrink-0 text-[#B08A1C] mt-0.5" />
+          <div>
+            <h2 className="text-lg sm:text-xl md:text-[22px] font-black text-[#111111] leading-tight">Expense Tracker</h2>
+            <p className="text-[12px] sm:text-[13px] text-[#6B7280] mt-0.5">Monitor store overheads, operating costs, and categorized expenses</p>
+          </div>
         </div>
       </div>
 
@@ -188,14 +191,14 @@ export default function Expenses() {
               { label: 'This Year', value: formatCurrency(totalYear), Icon: Receipt, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
               { label: 'Total All Time', value: formatCurrency(totalAll), Icon: Wallet, iconBg: 'bg-[#141414]', iconColor: 'text-[#D9A62E]' },
             ].map((c, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 p-3 sm:p-4 shadow-sm overflow-hidden">
-                <span className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} ${c.iconColor}`}>
-                  <c.Icon size={18} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280] mb-0.5">{c.label}</p>
-                  <p className="text-[13px] sm:text-[15px] xl:text-[18px] font-black text-[#111111] truncate" title={c.value}>{c.value}</p>
+              <div key={i} className="bg-white rounded-2xl border border-[#FDDBB4]/60 p-3 sm:p-4 shadow-sm overflow-hidden">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-[#6B7280]">{c.label}</p>
+                  <span className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-lg ${c.iconBg} ${c.iconColor}`}>
+                    <c.Icon size={14} />
+                  </span>
                 </div>
+                <p className="mt-1 text-[13px] sm:text-[15px] xl:text-[18px] font-black text-[#111111] truncate" title={c.value}>{c.value}</p>
               </div>
             ))}
           </div>

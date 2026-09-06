@@ -1174,13 +1174,25 @@ export default function Dashboard() {
           </button>
         </div>
         {/* Mobile mini-header */}
-        <div className="flex lg:hidden items-center justify-between px-4 py-4 border-b border-white/10">
-          <Link to="/pos" title="Go to Billing Panel" className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black border border-[#D9A62E]/70 shrink-0 overflow-hidden shadow-sm p-1 hover:scale-105 transition-transform">
+        <div className="flex lg:hidden items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
+          <Link to="/pos" title="Go to Billing Panel" className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black border border-[#D9A62E]/70 shrink-0 overflow-hidden shadow-sm p-1 hover:scale-105 transition-transform">
               <img src="/logo.png" alt="JJ Signature logo" className="w-full h-full object-cover" />
             </div>
-            <span className="text-[16px] font-black text-white truncate">JJ Signature</span>
+            <span className="text-[15px] font-black text-white truncate">JJ Signature</span>
+            <span className="shrink-0 rounded-full border border-[#D9A62E]/50 bg-[#D9A62E]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#D9A62E]">
+              {role === 'admin' ? 'Admin' : 'Staff'}
+            </span>
           </Link>
+          <button
+            onClick={() => {
+              useAdminAuthStore.getState().logout()
+              navigate('/admin-login', { replace: true })
+            }}
+            className="shrink-0 flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/15 px-3 h-8 text-[11px] font-bold text-white transition-colors"
+          >
+            <Power size={13} /> Logout
+          </button>
         </div>
         {/* Nav */}
         <nav
@@ -1216,12 +1228,11 @@ export default function Dashboard() {
               navigate('/admin-login', { replace: true })
             }}
             className={[
-              'flex-1 min-w-0 lg:flex-none lg:shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
-              'gap-1 lg:gap-3',
-              'h-[56px] lg:w-full lg:h-[48px]',
+              'hidden lg:flex lg:flex-none lg:shrink-0 items-center lg:justify-start',
+              'lg:gap-3',
+              'lg:w-full lg:h-[48px]',
               sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
-              'px-0 py-1 lg:py-0',
-              'rounded-xl font-bold text-[11px] lg:text-[14px] transition-all text-white/70 hover:bg-red-500/15 hover:text-red-300 lg:mt-auto mb-1 lg:mb-4 overflow-hidden',
+              'rounded-xl font-bold lg:text-[14px] transition-all text-white/70 hover:bg-red-500/15 hover:text-red-300 lg:mt-auto mb-1 lg:mb-4 overflow-hidden',
             ].join(' ')}
           >
             <span className="shrink-0"><Power size={20} /></span>
