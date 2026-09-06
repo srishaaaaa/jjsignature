@@ -1141,7 +1141,7 @@ export default function Dashboard() {
   const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses'))
 
   return (
-    <div className="admin-shell h-screen min-h-screen bg-bgMain flex flex-col lg:flex-row overflow-hidden">
+    <div className="admin-shell h-dvh min-h-dvh bg-bgMain flex flex-col lg:flex-row overflow-hidden">
       {unackedLoginLowStockItems.length > 0 && (
         <LowStockAlarmModal items={unackedLoginLowStockItems} onAcknowledge={acknowledgeLoginLowStockAlarm} />
       )}
