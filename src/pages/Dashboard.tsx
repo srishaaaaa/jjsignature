@@ -1129,14 +1129,14 @@ export default function Dashboard() {
   )
 
   const allNavItems: Array<{ id: TabKey; icon: React.ReactNode; label: string }> = [
-    { id: 'billing',       icon: <ShoppingCart size={20} />,     label: 'Billing Panel' },
-    { id: 'advance_orders',icon: <FileText size={20} />,         label: 'Advance Orders' },
-    { id: 'inventory',     icon: <Package size={20} />,           label: 'Inventory' },
-    { id: 'history',       icon: <List size={20} />,             label: 'Order History' },
-    { id: 'pos_analytics', icon: <BarChart2 size={20} />,        label: 'Analytics Dashboard' },
-    { id: 'coupons',       icon: <Box size={20} />,              label: 'Coupons' },
-    { id: 'expenses',      icon: <Receipt size={20} />,          label: 'Expenses' },
-    { id: 'attendance',    icon: <Users size={20} />,            label: 'Attendance' },
+    { id: 'billing',       icon: <ShoppingCart size={18} />,     label: 'Billing Panel' },
+    { id: 'advance_orders',icon: <FileText size={18} />,         label: 'Advance Orders' },
+    { id: 'inventory',     icon: <Package size={18} />,           label: 'Inventory' },
+    { id: 'history',       icon: <List size={18} />,             label: 'Order History' },
+    { id: 'pos_analytics', icon: <BarChart2 size={18} />,        label: 'Analytics Dashboard' },
+    { id: 'coupons',       icon: <Box size={18} />,              label: 'Coupons' },
+    { id: 'expenses',      icon: <Receipt size={18} />,          label: 'Expenses' },
+    { id: 'attendance',    icon: <Users size={18} />,            label: 'Attendance' },
   ]
   const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses'))
 
@@ -1174,13 +1174,13 @@ export default function Dashboard() {
           </button>
         </div>
         {/* Mobile mini-header */}
-        <div className="flex lg:hidden items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
-          <Link to="/pos" title="Go to Billing Panel" className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black border border-[#D9A62E]/70 shrink-0 overflow-hidden shadow-sm p-1 hover:scale-105 transition-transform">
+        <div className="flex lg:hidden items-center justify-between gap-2 px-3.5 py-2.5 border-b border-white/10">
+          <Link to="/pos" title="Go to Billing Panel" className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black border border-[#D9A62E]/70 shrink-0 overflow-hidden shadow-sm p-1 hover:scale-105 transition-transform">
               <img src="/logo.png" alt="JJ Signature logo" className="w-full h-full object-cover" />
             </div>
-            <span className="text-[15px] font-black text-white truncate">JJ Signature</span>
-            <span className="shrink-0 rounded-full border border-[#D9A62E]/50 bg-[#D9A62E]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#D9A62E]">
+            <span className="text-[14px] font-black text-white truncate">JJ Signature</span>
+            <span className="shrink-0 rounded-full border border-[#D9A62E]/50 bg-[#D9A62E]/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#D9A62E]">
               {role === 'admin' ? 'Admin' : 'Staff'}
             </span>
           </Link>
@@ -1189,14 +1189,14 @@ export default function Dashboard() {
               useAdminAuthStore.getState().logout()
               navigate('/admin-login', { replace: true })
             }}
-            className="shrink-0 flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/15 px-3 h-8 text-[11px] font-bold text-white transition-colors"
+            className="shrink-0 flex items-center gap-1 rounded-full bg-white/10 hover:bg-white/15 px-2.5 h-7 text-[10px] font-bold text-white transition-colors"
           >
-            <Power size={13} /> Logout
+            <Power size={12} /> Logout
           </button>
         </div>
         {/* Nav */}
         <nav
-          className={`flex overflow-visible lg:flex-col gap-1 px-2 py-3 lg:gap-2 lg:py-2 lg:flex-grow transition-all duration-300 ${sidebarCollapsed ? 'lg:px-2' : 'lg:px-4'}`}
+          className={`flex overflow-visible lg:flex-col gap-1 px-1.5 py-2 lg:gap-2 lg:py-2 lg:flex-grow transition-all duration-300 ${sidebarCollapsed ? 'lg:px-2' : 'lg:px-4'}`}
         >
           {navItems.map(item => (
             <button
@@ -1205,11 +1205,11 @@ export default function Dashboard() {
               title={item.label}
               className={[
                 'flex-1 min-w-0 lg:flex-none lg:shrink-0 flex flex-col lg:flex-row items-center justify-center lg:justify-start',
-                'gap-1 lg:gap-3',
-                'h-[56px] lg:w-full lg:h-[48px]',
+                'gap-0.5 lg:gap-3',
+                'h-11 lg:w-full lg:h-[48px]',
                 sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
                 'px-0 py-1 lg:py-0',
-                'rounded-xl font-bold text-[11px] lg:text-[14px] transition-all overflow-hidden',
+                'rounded-lg lg:rounded-xl font-bold text-[10px] lg:text-[14px] transition-all overflow-hidden',
                 tab === item.id ? 'bg-[#D9A62E] text-[#141414] shadow-sm' : 'text-white/70 hover:bg-white/10 hover:text-white',
               ].join(' ')}
             >
@@ -1244,7 +1244,7 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="flex-grow flex flex-col overflow-hidden">
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
+        <div className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
         <div className="mx-auto w-full max-w-[1600px]">
 
         {/* ΓöÇΓöÇ ANALYTICS TAB ΓöÇΓöÇ */}
@@ -1796,7 +1796,7 @@ export default function Dashboard() {
         {tab === 'pos_analytics' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg sm:text-xl md:text-[24px] font-bold text-[#111111]">POS Analytics</h2>
+              <h2 className="text-base sm:text-xl md:text-[24px] font-bold text-[#111111]">POS Analytics</h2>
               <p className="text-[12px] sm:text-[13px] text-[#6B7280]">Real time store & channel insights</p>
             </div>
 
@@ -2699,7 +2699,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1">
-                  <h2 className="text-[22px] lg:text-[24px] leading-none font-black text-[#111111]">{l('Coupon Management', 'கூப்பன் மேலாண்மை')}</h2>
+                  <h2 className="text-base sm:text-xl lg:text-[24px] leading-tight font-black text-[#111111]">{l('Coupon Management', 'கூப்பன் மேலாண்மை')}</h2>
                   <p className="max-w-2xl text-[12px] lg:text-[12px] font-medium text-[#6C665C]">
                     {l('Create and manage discount codes. Applies to product subtotal only.', 'பொருட்களின் subtotal-க்கு மட்டும் கூப்பன் தள்ளுபடி பொருந்தும்.')}
                   </p>

@@ -158,13 +158,13 @@ export default function Expenses() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-        <div className="flex items-start gap-3">
-          <Receipt size={20} className="sm:size-6 shrink-0 text-[#B08A1C] mt-0.5" />
+    <div className="p-3 sm:p-6 space-y-3 sm:space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+        <div className="flex items-start gap-2">
+          <Receipt size={16} className="sm:size-6 shrink-0 text-[#B08A1C] mt-0.5" />
           <div>
-            <h2 className="text-lg sm:text-xl md:text-[22px] font-black text-[#111111] leading-tight">Expense Tracker</h2>
-            <p className="text-[12px] sm:text-[13px] text-[#6B7280] mt-0.5">Monitor store overheads, operating costs, and categorized expenses</p>
+            <h2 className="text-base sm:text-xl md:text-[22px] font-black text-[#111111] leading-tight">Expense Tracker</h2>
+            <p className="text-[11px] sm:text-[13px] text-[#6B7280] mt-0.5">Monitor store overheads, operating costs, and categorized expenses</p>
           </div>
         </div>
       </div>

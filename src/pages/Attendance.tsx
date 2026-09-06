@@ -136,9 +136,9 @@ export default function Attendance() {
   const leaveCount = activeStaff.filter(s => ['half-day', 'leave'].includes(attendanceMap[s.id])).length
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-black text-[#111111] flex items-center gap-2"><Users size={20} className="sm:size-6 shrink-0 text-[#B08A1C]" /> Attendance & Staff</h1>
+    <div className="p-3 sm:p-6 space-y-3 sm:space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <h1 className="text-base sm:text-xl md:text-2xl font-black text-[#111111] flex items-center gap-1.5"><Users size={16} className="sm:size-6 shrink-0 text-[#B08A1C]" /> Attendance & Staff</h1>
       </div>
 
       {dbError && (
