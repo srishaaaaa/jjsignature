@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Package, Search, AlertTriangle, X, RefreshCw, Edit2, Plus, Minus, Trash2, Download, TrendingUp, PieChart, Boxes, Tag, BarChart3, Layers, IndianRupee, History, SlidersHorizontal, Target, Undo2, CheckCircle2, ArrowUpRight, ArrowDownRight, ShoppingCart, ChevronDown, PackagePlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
-import { useSound } from '../context/SoundContext'
 import LowStockAlarmModal from '../components/LowStockAlarmModal'
 import { BRAND_EN } from '../lib/brand'
 import { useAdminAuthStore } from '../store/store'
@@ -380,7 +379,6 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
 }
 
 export default function Inventory() {
-  const { play } = useSound()
   const role = useAdminAuthStore(state => state.role)
   const [activeTab, setActiveTab] = useState<'stock' | 'products' | 'categories' | 'analytics'>('stock')
 
@@ -568,12 +566,10 @@ export default function Inventory() {
         reference_id: tagNoteWithUser(role, note),
       }).then(() => {})
 
-      play('success')
       setAdjustModal(null)
       void fetchProducts()
     } catch (err: unknown) {
       setNotice(err instanceof Error ? err.message : 'Failed to update stock')
-      play('error')
     } finally {
       setSaving(false)
     }
@@ -637,7 +633,6 @@ export default function Inventory() {
         setProductNotice('Product added successfully!')
         setProductForm(EMPTY_FORM)
       }
-      play('success')
       void fetchProducts()
     } catch (err) {
       console.error('Save product error:', err)
@@ -649,7 +644,6 @@ export default function Inventory() {
           ? `A product named "${productForm.name.trim()}" already exists in the "${productForm.category || 'selected'}" category. Use a different name, or edit that existing product instead.`
           : `Failed to save: ${message}`
       )
-      play('error')
     } finally {
       setSavingProduct(false)
     }
@@ -673,7 +667,6 @@ export default function Inventory() {
       setNewCatName('')
       setCatNotice('Category added!')
       void fetchCategories()
-      play('success')
     } catch (err: unknown) {
       setCatNotice(err instanceof Error ? err.message : 'Failed to add category')
     } finally {

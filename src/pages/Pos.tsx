@@ -7,7 +7,6 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Wifi, WifiOff, Layers, X, ChevronDown, Power, LogOut, Volume2, VolumeX
 } from 'lucide-react'
-import { useSound } from '../context/SoundContext'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { debounce } from '../lib/debounce'
 import { useProductStore, useVariantStore, useAdminAuthStore, type Product } from '../store/store'
@@ -122,7 +121,6 @@ type PosProps = {
 }
 
 export default function Pos(props: PosProps = {}) {
-  const { play } = useSound()
   const { toast } = useToast()
   const { products, fetchProducts } = useProductStore()
   const { getVariants, fetchVariants } = useVariantStore()
@@ -508,7 +506,7 @@ export default function Pos(props: PosProps = {}) {
 
   // ── Generate bill ─────────────────────────────────────────────────────
   const generateBill = async () => {
-    if (!items.length) { play('error'); setError('Add at least one product.'); return }
+    if (!items.length) { setError('Add at least one product.'); return }
     // Validate required phone
     const normalizedPhone = normalizePhone(customer.phone || '')
     if (!normalizedPhone) { setError('Please enter a valid Indian mobile number (e.g. 9876543210 or +91 98765 43210)'); return }
@@ -601,7 +599,8 @@ export default function Pos(props: PosProps = {}) {
         paymentMethod: paymentMode,
       }
       setInvoice(createdInvoice)
-      // Low stock check — toast + sound
+      // Low stock check — toast (no sound; the low-stock alarm is reserved
+      // for login and opening the Inventory tab, not routine billing)
       const lowStockItems = items.flatMap(item => {
         const product = products.find(p => p.id.toString() === item.id?.toString())
         if (!product) return []
@@ -612,13 +611,11 @@ export default function Pos(props: PosProps = {}) {
         return []
       })
       if (lowStockItems.length > 0) {
-        play('alert')          // single alert sound replaces success when stock is low
         toast.warning(
           'Low stock alert',
           lowStockItems.map(i => `${i.name} — ${i.stock <= 0 ? 'out of stock' : `${i.stock} left`}`).join(', '),
         )
       } else {
-        play('success')        // normal success sound when stock is fine
         toast.success('Bill generated successfully')
       }
 
@@ -627,7 +624,6 @@ export default function Pos(props: PosProps = {}) {
       setCustomer({ name: '', phone: '', address: '' })
       void fetchProducts()
     } catch (err: unknown) {
-      play('error')
       setError(err instanceof Error ? err.message : 'Failed to generate bill')
     } finally {
       setSaving(false)
