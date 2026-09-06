@@ -1256,14 +1256,13 @@ export default function Pos(props: PosProps = {}) {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black text-[#374151]">Delivery</span>
-                  <Input
+                <div className="flex items-center justify-between gap-2">
+                  <span className="shrink-0 text-[11px] font-black text-[#374151]">Delivery</span>
+                  <input
                     type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    size="sm"
                     value={shipping}
                     onChange={e => setShipping(e.target.value)}
-                    className="w-20 text-right"
+                    className="h-9 w-20 shrink-0 box-border rounded-xl border border-[#FDDBB4]/60 bg-white px-2 text-[12px] font-bold text-[#111111] text-right outline-none transition-colors focus:border-[#B08A1C]"
                   />
                 </div>
 
