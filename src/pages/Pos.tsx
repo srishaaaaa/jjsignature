@@ -1109,8 +1109,8 @@ export default function Pos(props: PosProps = {}) {
         </div>
 
         {/* RIGHT COLUMN (approx 32%) */}
-        <div className="flex-[1] flex min-h-0 flex-col gap-6 sticky top-4 h-[calc(100vh-140px)] max-h-[calc(100vh-140px)]">
-          <div className="flex min-h-0 h-full max-h-full flex-col overflow-hidden rounded-2xl border border-[#FDDBB4]/60 bg-[#FAF9F6] shadow-sm">
+        <div className="flex-[1] flex min-h-0 flex-col gap-6 lg:sticky lg:top-4 lg:h-[calc(100vh-140px)] lg:max-h-[calc(100vh-140px)]">
+          <div className="flex min-h-0 flex-col rounded-2xl border border-[#FDDBB4]/60 bg-[#FAF9F6] shadow-sm lg:h-full lg:max-h-full lg:overflow-hidden">
 
             {/* Header */}
             <div className="flex items-center justify-between p-3 border-b border-[#FDDBB4]/60 bg-white shrink-0">
@@ -1125,7 +1125,7 @@ export default function Pos(props: PosProps = {}) {
             </div>
 
             {/* Content body */}
-            <div className="min-h-0 flex-1 overflow-y-auto bg-white p-3 space-y-2 hide-scrollbar">
+            <div className="min-h-0 flex-1 lg:overflow-y-auto bg-white p-3 space-y-2 hide-scrollbar">
 
               {/* Info Table */}
               <div className="border border-[#FDDBB4]/40 rounded-xl overflow-hidden text-[11px] font-bold">
