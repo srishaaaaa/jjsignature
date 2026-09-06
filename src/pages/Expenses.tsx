@@ -249,42 +249,19 @@ export default function Expenses() {
             </div>
           </div>
 
-          {/* Mobile card list */}
-          <div className="space-y-3 md:hidden">
-            {loading ? (
-              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">Loading...</p>
-            ) : filteredExpenses.length === 0 ? (
-              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">
-                {expenses.length === 0 ? 'No expenses recorded yet.' : 'No expenses in the selected date range.'}
-              </p>
-            ) : filteredExpenses.map(exp => (
-              <div key={exp.id} className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 p-3.5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <span className="bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
-                      {exp.expense_categories?.name || 'Unknown'}
-                    </span>
-                    <p className="mt-1.5 text-[11px] font-semibold text-[#6B7280]">{new Date(exp.expense_date).toLocaleDateString('en-MY')}</p>
-                  </div>
-                  <button onClick={() => handleDeleteExpense(exp.id)} className="shrink-0 h-9 w-9 flex items-center justify-center text-red-400 hover:text-red-600 bg-red-50 rounded-lg"><Trash2 size={14} /></button>
-                </div>
-                {exp.description && <p className="mt-2 text-[12px] text-[#374151]">{exp.description}</p>}
-                <p className="mt-2 text-[15px] font-black text-red-600">{formatCurrency(exp.amount)}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table */}
-          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+            <div className="px-4 py-3 bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-[#374151]">Expense Records ({filteredExpenses.length})</h3>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="min-w-[640px] w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Date</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Category</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Description</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Amount</th>
-                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] text-right">Actions</th>
+                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] whitespace-nowrap">Date</th>
+                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] whitespace-nowrap">Category</th>
+                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] whitespace-nowrap">Description</th>
+                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] whitespace-nowrap">Amount</th>
+                    <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -296,15 +273,15 @@ export default function Expenses() {
                     </td></tr>
                   ) : filteredExpenses.map(exp => (
                     <tr key={exp.id} className="border-b border-[#FDDBB4]/30 hover:bg-[#FAFAFA]">
-                      <td className="px-4 py-3 text-sm font-semibold text-[#111111]">{new Date(exp.expense_date).toLocaleDateString('en-MY')}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-sm font-semibold text-[#111111] whitespace-nowrap">{new Date(exp.expense_date).toLocaleDateString('en-MY')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <span className="bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
                           {exp.expense_categories?.name || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-[#374151]">{exp.description || '—'}</td>
-                      <td className="px-4 py-3 text-sm font-black text-red-600">{formatCurrency(exp.amount)}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-sm text-[#374151] whitespace-nowrap max-w-[220px] truncate">{exp.description || '—'}</td>
+                      <td className="px-4 py-3 text-sm font-black text-red-600 whitespace-nowrap">{formatCurrency(exp.amount)}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
                         <button onClick={() => handleDeleteExpense(exp.id)} className="text-red-400 hover:text-red-600 p-1.5 bg-red-50 rounded-lg"><Trash2 size={14} /></button>
                       </td>
                     </tr>

@@ -307,62 +307,30 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
         ) : filteredLogs.length === 0 ? (
           <p className="text-center py-10 text-sm font-bold text-[#9CA3AF]">No stock movements match this filter.</p>
         ) : (
-          <>
-            {/* Mobile card list */}
-            <div className="space-y-2.5 p-3 md:hidden">
-              {filteredLogs.map(log => {
-                const { user, note } = parseLoggedNote(log.reference_id)
-                return (
-                  <div key={log.id} className="rounded-xl border border-[#F0EEE9] bg-white p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold text-[13px] text-[#111111] truncate">{log.products?.name || '—'}</p>
-                        <p className="text-[11px] text-[#6B7280]">{log.products?.category || '—'}</p>
-                      </div>
-                      <span className={`shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-[11px]">
-                      <span className="text-[#9CA3AF]">
-                        {new Date(log.created_at).toLocaleDateString('en-MY')} · {new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}
-                      </span>
-                      <span className={`font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</span>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-[#374151]">{log.old_quantity} → <span className="text-[#111111]">{log.new_quantity}</span></span>
-                      <span className="text-[#9CA3AF] font-semibold">{user}</span>
-                    </div>
-                    {note && <p className="mt-1.5 text-[11px] text-[#9CA3AF] truncate">{note}</p>}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-[#F8F7F4] text-[10px] font-black uppercase tracking-wider text-[#737B72]">
-                  <tr>{['Date & Time', 'Type', 'Product', 'Category', 'Qty Delta', 'Before → After', 'User', 'Notes'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
-                </thead>
-                <tbody className="divide-y divide-[#F0EEE9]">
-                  {filteredLogs.map(log => {
-                    const { user, note } = parseLoggedNote(log.reference_id)
-                    return (
-                      <tr key={log.id} className="hover:bg-orange-50/30">
-                        <td className="px-4 py-3 text-[11px] text-[#6B7280] whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-MY')}<br/><span className="text-[10px] opacity-70">{new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span></td>
-                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span></td>
-                        <td className="px-4 py-3 font-bold text-[#111111] max-w-[200px]">{log.products?.name || '—'}</td>
-                        <td className="px-4 py-3 text-[#6B7280] text-xs">{log.products?.category || '—'}</td>
-                        <td className={`px-4 py-3 font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</td>
-                        <td className="px-4 py-3 font-bold text-[#374151]">{log.old_quantity} → <span className="text-[#111111]">{log.new_quantity}</span></td>
-                        <td className="px-4 py-3 text-xs font-bold text-[#374151]">{user}</td>
-                        <td className="px-4 py-3 text-xs text-[#9CA3AF] max-w-[160px] truncate">{note || '—'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
+          <div className="overflow-x-auto">
+            <table className="min-w-[820px] w-full text-sm">
+              <thead className="bg-[#F8F7F4] text-[10px] font-black uppercase tracking-wider text-[#737B72]">
+                <tr>{['Date & Time', 'Type', 'Product', 'Category', 'Qty Delta', 'Before → After', 'User', 'Notes'].map(h => <th key={h} className="px-4 py-3 text-left whitespace-nowrap">{h}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-[#F0EEE9]">
+                {filteredLogs.map(log => {
+                  const { user, note } = parseLoggedNote(log.reference_id)
+                  return (
+                    <tr key={log.id} className="hover:bg-orange-50/30">
+                      <td className="px-4 py-3 text-[11px] text-[#6B7280] whitespace-nowrap">{new Date(log.created_at).toLocaleDateString('en-MY')} <span className="opacity-70">{new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}</span></td>
+                      <td className="px-4 py-3 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span></td>
+                      <td className="px-4 py-3 font-bold text-[#111111] whitespace-nowrap max-w-[200px] truncate">{log.products?.name || '—'}</td>
+                      <td className="px-4 py-3 text-[#6B7280] text-xs whitespace-nowrap">{log.products?.category || '—'}</td>
+                      <td className={`px-4 py-3 font-black whitespace-nowrap ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</td>
+                      <td className="px-4 py-3 font-bold text-[#374151] whitespace-nowrap">{log.old_quantity} → <span className="text-[#111111]">{log.new_quantity}</span></td>
+                      <td className="px-4 py-3 text-xs font-bold text-[#374151] whitespace-nowrap">{user}</td>
+                      <td className="px-4 py-3 text-xs text-[#9CA3AF] whitespace-nowrap max-w-[160px] truncate">{note || '—'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -816,55 +784,9 @@ export default function Inventory() {
             </button>
           </div>
 
-          {/* Mobile card list */}
-          <div className="space-y-3 md:hidden">
-            {loading ? (
-              <p className="text-center py-10 text-sm font-bold text-[#6B7280] bg-white rounded-2xl border border-[#FDDBB4]/60">Loading inventory...</p>
-            ) : filtered.length === 0 ? (
-              <p className="text-center py-10 text-sm font-bold text-[#6B7280] bg-white rounded-2xl border border-[#FDDBB4]/60">No products found.</p>
-            ) : filtered.map(p => {
-              const status = getStatus(p)
-              const pillClass = status === 'out' ? 'bg-red-50 text-red-700 border-red-200' : status === 'low' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              return (
-                <div key={String(p.id)} className="rounded-2xl border border-[#FDDBB4]/60 bg-white shadow-sm p-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-[#111111] text-sm truncate">{p.name}</p>
-                      <p className="text-[11px] text-[#6B7280]">{p.category || '—'}</p>
-                    </div>
-                    <span className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 rounded-full text-[10px] font-black border ${pillClass}`}>
-                      {status === 'low' && <AlertTriangle size={9} />}
-                      {p.stock_quantity} Units
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex items-center justify-between text-[12px]">
-                    <span className="text-[#6B7280] font-semibold">Alert at <b className="text-[#374151]">{p.low_stock_alert || 5}</b></span>
-                    <span className="inline-flex items-center gap-1.5 font-black text-[#111111]">
-                      {formatCurrency(p.price)}
-                      <button onClick={() => startEditProduct(p)} title="Edit product" className="text-[#9CA3AF] hover:text-[#B08A1C]">
-                        <Edit2 size={12} />
-                      </button>
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <button onClick={() => openAdjust(p)}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-9 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] rounded-lg text-[11px] font-black hover:bg-orange-100">
-                      <RefreshCw size={12} /> Adjust
-                    </button>
-                    <button onClick={() => void openHistory(p)} title="Stock history"
-                      className="h-9 w-9 flex items-center justify-center bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
-                      <History size={14} />
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Desktop table */}
-          <div className="hidden md:block bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="min-w-[720px] w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
                   <tr>
                     {['Product', 'Category', 'Stock Level', 'Alert At', 'Selling Price', 'Actions'].map(h => (
@@ -882,15 +804,15 @@ export default function Inventory() {
                     const pillClass = status === 'out' ? 'bg-red-50 text-red-700 border-red-200' : status === 'low' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     return (
                       <tr key={String(p.id)} className="border-b border-[#FDDBB4]/20 hover:bg-[#FAFAFA]">
-                        <td className="px-4 py-3 font-bold text-[#111111] text-sm">{p.name}</td>
-                        <td className="px-4 py-3 text-sm text-[#374151]">{p.category || '—'}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 font-bold text-[#111111] text-sm whitespace-nowrap max-w-[220px] truncate">{p.name}</td>
+                        <td className="px-4 py-3 text-sm text-[#374151] whitespace-nowrap">{p.category || '—'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-black border ${pillClass}`}>
                             {status === 'low' && <AlertTriangle size={10} />}
                             {p.stock_quantity} Units
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-[#374151] font-semibold">{p.low_stock_alert || 5}</td>
+                        <td className="px-4 py-3 text-sm text-[#374151] font-semibold whitespace-nowrap">{p.low_stock_alert || 5}</td>
                         <td className="px-4 py-3 text-sm font-black text-[#111111] whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5">
                             {formatCurrency(p.price)}
@@ -899,7 +821,7 @@ export default function Inventory() {
                             </button>
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => openAdjust(p)}
                               className="flex items-center gap-1 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2.5 py-1.5 rounded-lg text-[11px] font-black hover:bg-orange-100">
