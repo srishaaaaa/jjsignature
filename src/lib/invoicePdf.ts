@@ -185,21 +185,20 @@ export async function invoicePdfFileFromElement(
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
   const pageWidth = 210
   const pageHeight = 297
-  const imageHeight = (canvas.height * pageWidth) / canvas.width
   const image = canvas.toDataURL('image/png')
 
-  if (imageHeight <= pageHeight + 10) {
-    doc.addImage(image, 'PNG', 0, 0, pageWidth, Math.min(pageHeight, imageHeight), undefined, 'FAST')
-  } else {
-    let offset = 0
-    let page = 0
-    while (offset < imageHeight) {
-      if (page > 0) doc.addPage()
-      doc.addImage(image, 'PNG', 0, -offset, pageWidth, imageHeight, undefined, 'FAST')
-      offset += pageHeight
-      page += 1
-    }
+  // Always fit the whole invoice on a single page: scale by whichever
+  // dimension (width or height) is more restrictive, then center it.
+  const widthFitHeight = (canvas.height * pageWidth) / canvas.width
+  let drawWidth = pageWidth
+  let drawHeight = widthFitHeight
+  if (widthFitHeight > pageHeight) {
+    drawHeight = pageHeight
+    drawWidth = (canvas.width * pageHeight) / canvas.height
   }
+  const offsetX = (pageWidth - drawWidth) / 2
+  const offsetY = (pageHeight - drawHeight) / 2
+  doc.addImage(image, 'PNG', offsetX, offsetY, drawWidth, drawHeight, undefined, 'FAST')
 
   return new File([doc.output('blob')], `Invoice-${formattedNo}.pdf`, { type: 'application/pdf' })
 }

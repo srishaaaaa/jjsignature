@@ -83,7 +83,7 @@ export default function StaffPunch({ embedded = false }: StaffPunchProps) {
       .upsert({ staff_id: selectedStaff.id, date: today, status: 'present', clock_in: now }, { onConflict: 'staff_id,date' })
       .select()
       .maybeSingle()
-    if (error) { setNotice('Something went wrong. Please try again.') }
+    if (error) { console.error('Punch in failed:', error); setNotice(error.message || 'Something went wrong. Please try again.') }
     else { setTodayRecord(data as AttendanceRecord); setStep('done'); setNotice('punch_in') }
     setSaving(false)
   }
@@ -100,7 +100,7 @@ export default function StaffPunch({ embedded = false }: StaffPunchProps) {
       .eq('date', today)
       .select()
       .maybeSingle()
-    if (error) { setNotice('Something went wrong. Please try again.') }
+    if (error) { console.error('Punch out failed:', error); setNotice(error.message || 'Something went wrong. Please try again.') }
     else { setTodayRecord(data as AttendanceRecord); setStep('done'); setNotice('punch_out') }
     setSaving(false)
   }
@@ -174,7 +174,7 @@ export default function StaffPunch({ embedded = false }: StaffPunchProps) {
                 <p className="text-[12px] text-[#9BAB9A] mt-2">{currentDate}</p>
               </div>
 
-              {todayRecord && (
+              {todayRecord && (todayRecord.clock_in || todayRecord.clock_out) && (
                 <div className="bg-white rounded-2xl border border-[#FDDBB4]/60 p-4 mb-5 space-y-2">
                   {todayRecord.clock_in && (
                     <div className="flex items-center gap-2">

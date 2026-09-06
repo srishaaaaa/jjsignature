@@ -464,11 +464,18 @@ export default function Inventory() {
     void fetchCategories()
   }, [fetchProducts, fetchCategories])
 
-  // Low-stock alarm items — fires fresh every time this tab is opened (the
-  // component fully unmounts when switching away, resetting ackedLowStockIds),
-  // and re-appears mid-visit if a *new* item crosses the threshold after an
-  // adjustment, since only acknowledged ids are filtered out.
-  const lowStockAlarmItems = products
+  // Low-stock alarm items — snapshotted once when this tab first finishes
+  // loading (the component fully unmounts when switching away, so re-opening
+  // the tab re-snapshots). Deliberately does NOT recompute from later
+  // fetchProducts() refreshes (after an adjustment, manual refresh, etc.) so
+  // the alarm only sounds on tab-entry, never mid-visit from routine actions.
+  const [alarmSnapshot, setAlarmSnapshot] = useState<InventoryProduct[] | null>(null)
+  useEffect(() => {
+    if (!loading && alarmSnapshot === null) setAlarmSnapshot(products)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading])
+
+  const lowStockAlarmItems = (alarmSnapshot ?? [])
     .filter(p => p.is_active !== false && getStatus(p) !== 'ok')
     .map(p => ({ id: p.id, name: p.name, category: p.category, stock: p.stock_quantity, alertLimit: p.low_stock_alert || 5 }))
   const unackedLowStockItems = lowStockAlarmItems.filter(i => !ackedLowStockIds.has(i.id))
@@ -499,8 +506,6 @@ export default function Inventory() {
   const stockValue = activeProducts.reduce((s, p) => s + (p.stock_quantity * p.price), 0)
 
   const openAdjust = (product: InventoryProduct) => {
-    const status = getStatus(product)
-    if (status === 'low' || status === 'out') play('alert')
     setAdjustModal({ product, qty: '1', adjustType: 'restock', note: '' })
   }
 
@@ -879,8 +884,8 @@ export default function Inventory() {
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-[#374151] mb-1.5">Category</label>
                   <select value={productForm.category} onChange={e => setProductForm(f => ({...f, category: e.target.value}))}
-                    className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C] bg-white">
-                    <option value="">— Select Category —</option>
+                    className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-[12px] sm:text-sm font-bold outline-none focus:border-[#B08A1C] bg-white">
+                    <option value="">Select Category</option>
                     {categories.filter(c => c.is_active).map(c => (
                       <option key={String(c.id)} value={c.name_en}>{c.name_en}</option>
                     ))}

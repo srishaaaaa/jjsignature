@@ -924,6 +924,7 @@ export default function Pos(props: PosProps = {}) {
                 <Input
                   id="pos-billing-date"
                   type="date"
+                  className="text-left"
                   value={billingDate}
                   onChange={e => setBillingDate(e.target.value)}
                 />
