@@ -2429,12 +2429,12 @@ export default function Dashboard() {
           <div className="space-y-4 sm:space-y-6 rounded-[20px] sm:rounded-[28px] border border-[#FDDBB4]/60 bg-[#FBFAF6] p-3 sm:p-6 lg:p-7 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#10B981]">{l('Billing history', 'பில் வரலாறு')}</p>
-                <h2 className="mt-1 text-xl font-black text-[#111111]">{l('Order Management', 'ஆர்டர் மேலாண்மை')} <span className="text-[11px] font-semibold text-[#374151]">({l('POS Bills only', 'POS பில்கள் மட்டுமே')})</span></h2>
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.24em] text-[#10B981]">{l('Billing history', 'பில் வரலாறு')}</p>
+                <h2 className="mt-1 text-base sm:text-xl md:text-2xl font-black text-[#111111]">{l('Order Management', 'ஆர்டர் மேலாண்மை')} <span className="text-[11px] font-semibold text-[#374151]">({l('POS Bills only', 'POS பில்கள் மட்டுமே')})</span></h2>
               </div>
               <div className="flex gap-2">
-                <Link to="/pos" className="inline-flex items-center gap-2 rounded-xl bg-[#111111] px-4 py-2 text-[13px] font-bold text-white shadow-sm hover:bg-[#141414]">
-                  <ShoppingCart size={14} /> Open POS
+                <Link to="/pos" className="inline-flex items-center gap-1.5 rounded-lg bg-[#111111] px-3 h-8 text-[12px] font-bold text-white shadow-sm hover:bg-[#141414]">
+                  <ShoppingCart size={13} /> Open POS
                 </Link>
               </div>
             </div>

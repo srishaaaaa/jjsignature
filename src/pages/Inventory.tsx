@@ -266,13 +266,13 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
           { label: 'Lost / Damaged', value: `${totalLost} Units`, Icon: AlertTriangle, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
           { label: 'Net Stock Delta', value: `${netDelta >= 0 ? '+' : ''}${netDelta} Units`, Icon: TrendingUp, iconBg: 'bg-[#141414]', iconColor: 'text-[#D9A62E]' },
         ].map(c => (
-          <div key={c.label} className="flex items-center gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 p-4 shadow-sm overflow-hidden">
-            <span className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-xl ${c.iconBg} ${c.iconColor}`}>
-              <c.Icon size={18} />
+          <div key={c.label} className="flex items-center gap-2 sm:gap-3 bg-white rounded-2xl border border-[#FDDBB4]/60 p-3 sm:p-4 shadow-sm overflow-hidden">
+            <span className={`shrink-0 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl ${c.iconBg} ${c.iconColor}`}>
+              <c.Icon size={16} className="sm:size-[18px]" />
             </span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#9CA3AF] mb-0.5">{c.label}</p>
-              <p className="text-lg font-black text-[#111111]">{c.value}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#9CA3AF] mb-0.5 truncate">{c.label}</p>
+              <p className="text-[15px] sm:text-lg font-black text-[#111111] truncate">{c.value}</p>
             </div>
           </div>
         ))}
@@ -344,15 +344,15 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
             {products.filter(p => p.stock_quantity > 0)
               .sort((a, b) => (b.stock_quantity * b.price) - (a.stock_quantity * a.price))
               .slice(0, 5).map((p, i) => (
-                <div key={p.id} className="flex flex-wrap justify-between items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div key={p.id} className="flex justify-between items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-white font-black text-xs text-slate-400 shadow-sm">{i + 1}</span>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-slate-800 break-words">{p.name}</p>
-                      <p className="text-[10px] text-slate-500">{p.stock_quantity} units • {formatCurrency(p.price)}/unit</p>
+                      <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{p.stock_quantity} units • {formatCurrency(p.price)}/unit</p>
                     </div>
                   </div>
-                  <p className="font-black text-emerald-600 shrink-0 ml-2">{formatCurrency(p.stock_quantity * p.price)}</p>
+                  <p className="font-black text-emerald-600 shrink-0 ml-2 whitespace-nowrap">{formatCurrency(p.stock_quantity * p.price)}</p>
                 </div>
             ))}
             {products.filter(p => p.stock_quantity > 0).length === 0 && <p className="text-sm text-slate-400 text-center py-4">No data.</p>}
@@ -734,20 +734,20 @@ export default function Inventory() {
       {activeTab === 'stock' && (
         <div className="space-y-5">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'Total SKUs', value: activeProducts.length, iconBg: 'bg-[#141414]', iconColor: 'text-[#D9A62E]', Icon: Layers },
               { label: 'Total Stock', value: `${activeProducts.reduce((s, p) => s + p.stock_quantity, 0)} Units`, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', Icon: Package },
               { label: 'Low Stock Items', value: lowCount + outCount, iconBg: 'bg-amber-50', iconColor: 'text-amber-600', Icon: AlertTriangle },
               { label: 'Stock Valuation', value: formatCurrency(stockValue), iconBg: 'bg-[#FFF8F2]', iconColor: 'text-[#B08A1C]', Icon: IndianRupee },
             ].map((card, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl border border-[#FDDBB4]/60 bg-white p-4 shadow-sm overflow-hidden">
-                <span className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl ${card.iconBg} ${card.iconColor}`}>
-                  <card.Icon size={20} />
+              <div key={i} className="flex items-center gap-2 sm:gap-3 rounded-2xl border border-[#FDDBB4]/60 bg-white p-3 sm:p-4 shadow-sm overflow-hidden">
+                <span className={`shrink-0 flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl ${card.iconBg} ${card.iconColor}`}>
+                  <card.Icon size={16} className="sm:size-5" />
                 </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-[#6B7280] mb-0.5">{card.label}</p>
-                  <p className="text-xl font-black text-[#111111] break-words">{card.value}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-[#6B7280] mb-0.5 truncate">{card.label}</p>
+                  <p className="text-[13px] sm:text-xl font-black text-[#111111] leading-tight break-words">{card.value}</p>
                 </div>
               </div>
             ))}
