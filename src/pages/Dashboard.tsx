@@ -199,15 +199,26 @@ export default function Dashboard() {
   const [userSearch, setUserSearch] = useState('')
   const [roleUpdating, setRoleUpdating] = useState<string | null>(null)
 
-  // Low-stock alarm — fires once per Dashboard mount (i.e. every login /
-  // every fresh navigation into the admin area), independent of which tab
-  // is open. The Inventory tab has its own separate alarm that fires every
-  // time that tab is opened.
+  // Low-stock alarm — fires only on a genuine fresh login (the login store
+  // action stamps a one-time sessionStorage flag), not on every reopen of
+  // an already-authenticated tab/bookmark, since Zustand's persisted auth
+  // state means Dashboard can mount with isLoggedIn already true without
+  // the user having just typed credentials. The Inventory tab has its own
+  // separate alarm that fires every time that tab is opened.
+  const [isFreshLogin, setIsFreshLogin] = useState(false)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('jj_signature_fresh_login')) {
+        sessionStorage.removeItem('jj_signature_fresh_login')
+        setIsFreshLogin(true)
+      }
+    } catch { /* ignore */ }
+  }, [])
   const [ackedLowStockIds, setAckedLowStockIds] = useState<Set<string | number>>(new Set())
   const loginLowStockItems = products
     .filter(p => p.isActive && p.stockQuantity <= (p.lowStockAlert || 5))
     .map(p => ({ id: p.id, name: p.name, category: p.category, stock: p.stockQuantity, alertLimit: p.lowStockAlert || 5 }))
-  const unackedLoginLowStockItems = loginLowStockItems.filter(i => !ackedLowStockIds.has(i.id))
+  const unackedLoginLowStockItems = isFreshLogin ? loginLowStockItems.filter(i => !ackedLowStockIds.has(i.id)) : []
   const acknowledgeLoginLowStockAlarm = () => {
     setAckedLowStockIds(prev => new Set([...prev, ...loginLowStockItems.map(i => i.id)]))
   }

@@ -600,10 +600,12 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         const id = portalId.trim()
         const pwd = password.trim()
         if (ADMIN_PORTAL_ID && ADMIN_PORTAL_PASSWORD && id === ADMIN_PORTAL_ID && pwd === ADMIN_PORTAL_PASSWORD) {
+          try { sessionStorage.setItem('jj_signature_fresh_login', '1') } catch { /* ignore */ }
           set({ isLoggedIn: true, role: 'admin' })
           return 'admin'
         }
         if (STAFF_PORTAL_ID && STAFF_PORTAL_PASSWORD && id === STAFF_PORTAL_ID && pwd === STAFF_PORTAL_PASSWORD) {
+          try { sessionStorage.setItem('jj_signature_fresh_login', '1') } catch { /* ignore */ }
           set({ isLoggedIn: true, role: 'staff' })
           return 'staff'
         }
