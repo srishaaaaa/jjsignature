@@ -10,7 +10,7 @@ After it runs, create the owner account in Supabase Authentication and set its `
 
 ## Alternative: migrations one at a time
 
-`all_in_one_setup.sql` is generated from the files in `supabase/migrations/`, run in filename order. If you'd rather apply them individually (e.g. to track which one introduces an issue), run them in that same filename order, ending with `20260904_0001_jj_signature_rebrand.sql`.
+`all_in_one_setup.sql` is generated from the files in `supabase/migrations/`, run in filename order. If you'd rather apply them individually (e.g. to track which one introduces an issue), run them in that same filename order, ending with `20260907_0001_fix_attendance_clock_columns.sql`.
 
 ## Notes
 

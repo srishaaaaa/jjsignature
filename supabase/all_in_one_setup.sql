@@ -2358,3 +2358,51 @@ ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_in TIMESTAMPTZ;
 ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_out TIMESTAMPTZ;
 
 NOTIFY pgrst, 'reload schema';
+
+-- FILE: 20260906_0001_add_reconciliation_reason.sql
+-- ═══════════════════════════════════════════════════════════
+-- Adds 'reconciliation' (set-exact-count stock takes) as a first-class
+-- inventory_logs.reason, alongside sale/restock/return/manual_adjustment/loss.
+-- Until this migration is applied, the app logs reconciliation adjustments
+-- as 'manual_adjustment' so it doesn't hit the old constraint.
+
+ALTER TABLE public.inventory_logs DROP CONSTRAINT IF EXISTS inventory_logs_reason_check;
+
+ALTER TABLE public.inventory_logs
+  ADD CONSTRAINT inventory_logs_reason_check
+  CHECK (reason IN ('sale', 'restock', 'return', 'manual_adjustment', 'loss', 'reconciliation'));
+
+-- FILE: 20260907_0001_fix_attendance_clock_columns.sql
+-- ═══════════════════════════════════════════════════════════
+-- Fix the staff attendance clock columns. Migration 0001 (new_modules)
+-- created public.attendance with a column named check_in_time and no
+-- clock-out column at all, but both StaffPunch.tsx (the public self-punch
+-- page) and Attendance.tsx (the admin view) read/write clock_in and
+-- clock_out — a naming mismatch that has never worked, since PostgREST
+-- errors with "Could not find the 'clock_in' column of 'attendance' in the
+-- schema cache" on every Punch In attempt. Rename the existing column
+-- (preserving any punch-in history already recorded) and add the missing
+-- clock_out column.
+--
+-- (This duplicates the fix already merged in earlier via the
+-- 20260904_0001_jj_signature_rebrand.sql section above; kept here too,
+-- idempotently, so this file matches the migrations/ directory 1:1.)
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'attendance' AND column_name = 'check_in_time'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'attendance' AND column_name = 'clock_in'
+  ) THEN
+    ALTER TABLE public.attendance RENAME COLUMN check_in_time TO clock_in;
+  END IF;
+END;
+$$;
+
+ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_in TIMESTAMPTZ;
+ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS clock_out TIMESTAMPTZ;
+
+NOTIFY pgrst, 'reload schema';
