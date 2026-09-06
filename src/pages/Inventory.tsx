@@ -754,7 +754,7 @@ export default function Inventory() {
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SKU name, category..."
                 className="w-full pl-9 pr-4 py-2.5 bg-[#FAFAFA] border border-[#FDDBB4]/40 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" />
             </div>
-            <div className="flex flex-nowrap items-stretch gap-1.5">
+            <div className="flex flex-nowrap items-stretch gap-1.5 sm:gap-2.5">
               {([
                 ['all', `All (${activeProducts.length})`],
                 ['ok', `In Stock (${inStockCount})`],
@@ -762,7 +762,7 @@ export default function Inventory() {
                 ['out', `Out of Stock (${outCount})`],
               ] as const).map(([f, label]) => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`flex-1 min-w-0 px-1.5 py-1.5 rounded-xl border text-[10.5px] leading-tight font-black text-center transition-colors ${
+                  className={`flex-1 min-w-0 sm:flex-none sm:min-w-[120px] px-1.5 py-1.5 sm:px-5 sm:py-3 rounded-xl border text-[10.5px] sm:text-[13px] leading-tight font-black text-center transition-colors ${
                     filter === f
                       ? f === 'out' ? 'bg-red-600 border-red-600 text-white' : f === 'low' ? 'bg-amber-500 border-amber-500 text-white' : f === 'ok' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-[#141414] border-[#141414] text-white'
                       : f === 'out' ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : f === 'low' ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100' : f === 'ok' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-white border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]'
@@ -772,8 +772,8 @@ export default function Inventory() {
               ))}
               <button onClick={() => { void fetchProducts(); void fetchCategories() }}
                 title="Refresh"
-                className="shrink-0 flex h-auto w-9 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
-                <RefreshCw size={15} />
+                className="shrink-0 flex h-auto w-9 sm:w-12 items-center justify-center rounded-xl border border-[#FDDBB4]/60 text-[#374151] hover:bg-[#FAFAFA]">
+                <RefreshCw size={15} className="sm:size-[18px]" />
               </button>
             </div>
           </div>
