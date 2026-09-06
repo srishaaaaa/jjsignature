@@ -2928,21 +2928,17 @@ export default function Dashboard() {
         )}
         
                 {tab === 'inventory' && (
-          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
-            <Inventory />
-          </div>
+          <Inventory />
         )}
 
         {tab === 'expenses' && (
-          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
-            <Expenses />
-          </div>
+          <Expenses />
         )}
-        
+
         {tab === 'attendance' && (
-          <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
+          <>
             {role === 'admin' ? <Attendance /> : <StaffPunch embedded={true} />}
-          </div>
+          </>
         )}
         
         {tab === 'users' && (
