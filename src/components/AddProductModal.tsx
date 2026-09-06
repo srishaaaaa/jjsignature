@@ -120,46 +120,44 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Category</label>
-              {categoryMode === 'select' ? (
-                <div className="flex gap-1">
-                  <select
-                    value={formData.category}
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                    className="flex-1 w-full px-4 py-3 bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold appearance-none"
-                  >
-                    <option value="">Select category</option>
-                    {existingCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => { setCategoryMode('new'); setFormData(f => ({...f, category: ''})) }}
-                    className="px-2 py-3 text-[10px] font-black text-[#B08A1C] bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl hover:bg-[#FDDBB4]/40 transition-colors shrink-0"
-                    title="Add new category"
-                  >+</button>
-                </div>
-              ) : (
-                <div className="flex gap-1">
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                    className="flex-1 w-full px-4 py-3 bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold"
-                    placeholder="Type new category"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { setCategoryMode('select'); setFormData(f => ({...f, category: ''})) }}
-                    className="px-2 py-3 text-[10px] font-black text-[#374151] bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl hover:bg-[#FDDBB4]/40 transition-colors shrink-0"
-                    title="Pick from existing"
-                  >↩</button>
-                </div>
-              )}
-            </div>
+          <div>
+            <label className="block text-[10px] font-black text-[#374151] tracking-wider uppercase mb-1.5">Category</label>
+            {categoryMode === 'select' ? (
+              <div className="flex gap-1">
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData({...formData, category: e.target.value})}
+                  className="flex-1 w-full min-w-0 px-4 py-3 bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold appearance-none"
+                >
+                  <option value="">Select category</option>
+                  {existingCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => { setCategoryMode('new'); setFormData(f => ({...f, category: ''})) }}
+                  className="px-2 py-3 text-[10px] font-black text-[#B08A1C] bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl hover:bg-[#FDDBB4]/40 transition-colors shrink-0"
+                  title="Add new category"
+                >+</button>
+              </div>
+            ) : (
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={e => setFormData({...formData, category: e.target.value})}
+                  className="flex-1 w-full px-4 py-3 bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold"
+                  placeholder="Type new category"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setCategoryMode('select'); setFormData(f => ({...f, category: ''})) }}
+                  className="px-2 py-3 text-[10px] font-black text-[#374151] bg-[#F9FAFB] border border-[#FDDBB4]/60 rounded-xl hover:bg-[#FDDBB4]/40 transition-colors shrink-0"
+                  title="Pick from existing"
+                >↩</button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
