@@ -1129,19 +1129,16 @@ export default function Dashboard() {
   )
 
   const allNavItems: Array<{ id: TabKey; icon: React.ReactNode; label: string }> = [
-    { id: 'overview',      icon: <LayoutDashboard size={20} />,  label: 'Overview' },
     { id: 'billing',       icon: <ShoppingCart size={20} />,     label: 'Billing Panel' },
     { id: 'advance_orders',icon: <FileText size={20} />,         label: 'Advance Orders' },
     { id: 'inventory',     icon: <Package size={20} />,           label: 'Inventory' },
     { id: 'history',       icon: <List size={20} />,             label: 'Order History' },
     { id: 'pos_analytics', icon: <BarChart2 size={20} />,        label: 'Analytics Dashboard' },
-    { id: 'whatsapp',      icon: <MessageCircle size={20} />,    label: 'WhatsApp Center' },
     { id: 'coupons',       icon: <Box size={20} />,              label: 'Coupons' },
     { id: 'expenses',      icon: <Receipt size={20} />,          label: 'Expenses' },
     { id: 'attendance',    icon: <Users size={20} />,            label: 'Attendance' },
-    { id: 'users',         icon: <ShieldCheck size={20} />,      label: 'Users' },
   ]
-  const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses' && item.id !== 'users'))
+  const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses'))
 
   return (
     <div className="admin-shell h-screen min-h-screen bg-bgMain flex flex-col lg:flex-row overflow-hidden">

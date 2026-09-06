@@ -16,6 +16,15 @@ export default {
         textMain:  '#111111',
         textMuted: '#6B7280',
         borderLight: '#DFC98A', // Soft Gold
+        // Storefront palette — used throughout Navbar/Footer/Cart/Checkout/
+        // Login/Products/Profile/Favorites/Drawers but never previously
+        // defined here, so every bg-sage/text-sageDark/border-sand/etc.
+        // class in those files was silently rendering with no color at all.
+        forestDark: '#1C2E22',
+        sage:       '#8CA88A',
+        sageDark:   '#3A5F47',
+        sageDeep:   '#28402F',
+        sand:       '#E8DFC8',
       },
       fontFamily: {
         sans:      ['Inter', 'sans-serif'],
