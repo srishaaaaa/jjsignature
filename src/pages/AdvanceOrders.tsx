@@ -1,6 +1,6 @@
 import { PAYMENT_METHODS } from '../lib/paymentMethods'
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { CalendarDays, CheckCircle2, Clock3, Download, Eye, FileText, MessageCircle, PackageCheck, Printer, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock3, Download, Eye, FileText, MessageCircle, PackageCheck, Plus, Printer, RefreshCw, Search, Trash2, X } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { formatCurrency } from '../lib/retail'
 import { invoicePdfFile } from '../lib/invoicePdf'
@@ -228,7 +228,7 @@ export default function AdvanceOrders({ onOrderCompleted }: AdvanceOrdersProps =
   ] as const
 
   return <div className="space-y-3 sm:space-y-5">
-    <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-[10px] sm:text-xs font-black uppercase tracking-[.18em] text-violet-600">Separate from sales</p><h2 className="text-base sm:text-xl md:text-2xl font-black text-[#273126]">Advance Orders</h2><p className="mt-1 text-[12px] sm:text-sm text-[#6B7280]">Deposits never count as revenue. Full order value is recognized only after final payment.</p></div><div className="flex gap-2"><button onClick={() => void load()} className="h-8 w-8 flex items-center justify-center rounded-lg border border-[#ECE9E2] bg-white text-[#647064] hover:bg-[#FAFAF8]" title="Refresh"><RefreshCw size={15}/></button></div></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-[10px] sm:text-xs font-black uppercase tracking-[.18em] text-violet-600">Separate from sales</p><h2 className="text-base sm:text-xl md:text-2xl font-black text-[#273126]">Advance Orders</h2><p className="mt-1 text-[12px] sm:text-sm text-[#6B7280]">Deposits never count as revenue. Full order value is recognized only after final payment.</p></div><div className="flex gap-2"><button onClick={() => void load()} className="h-8 w-8 flex items-center justify-center rounded-lg border border-[#ECE9E2] bg-white text-[#647064] hover:bg-[#FAFAF8]" title="Refresh"><RefreshCw size={15}/></button><button onClick={() => { setForm(initialForm); setCreateOpen(true) }} className="h-8 flex items-center gap-1.5 px-3 rounded-lg bg-[#141414] border border-[#D9A62E] text-[#D9A62E] text-xs font-black hover:bg-black"><Plus size={15}/> New Advance Order</button></div></div>
     {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
     {notice && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{notice}</div>}
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{cards.map(([label, value, Icon, color]) => <div key={label} className="rounded-2xl border border-[#ECE9E2] bg-white p-4 shadow-sm"><div className="flex items-center justify-between"><div className="min-w-0"><p className="text-[11px] font-black uppercase tracking-wide text-[#879086]">{label}</p><p className="mt-2 text-xl sm:text-2xl font-black text-[#273126] truncate">{value}</p></div><div className={`shrink-0 rounded-xl p-3 ${color}`}><Icon size={21}/></div></div></div>)}</div>
