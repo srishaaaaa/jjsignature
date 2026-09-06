@@ -154,7 +154,7 @@ export default function Attendance() {
       <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar">
         {(['today', 'report', 'staff'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`shrink-0 px-3 sm:px-4 h-10 rounded-xl font-bold text-[13px] sm:text-sm whitespace-nowrap transition-colors ${tab === t ? 'bg-[#B08A1C] text-white' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
+            className={`shrink-0 px-3 sm:px-4 h-10 rounded-xl font-bold text-[13px] sm:text-sm whitespace-nowrap transition-colors ${tab === t ? 'bg-[#141414] text-[#D9A62E]' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>
             {t === 'today' ? "Today's Attendance" : t === 'report' ? 'Monthly Report' : 'Staff Management'}
           </button>
         ))}
@@ -303,11 +303,39 @@ export default function Attendance() {
         <div className="space-y-5">
           <div className="flex justify-end">
             <button onClick={() => { setEditingStaff(null); setForm({ name: '', role: '', phone: '', base_salary: '' }); setShowModal(true) }} disabled={dbError}
-              className="bg-[#B08A1C] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#141414] disabled:opacity-50">
+              className="h-10 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-4 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-black disabled:opacity-50">
               <Plus size={16} /> Add Staff
             </button>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {staff.length === 0 ? (
+              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">No staff added yet.</p>
+            ) : staff.map(member => (
+              <div key={member.id} className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 p-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-[#111111] text-sm truncate">{member.name}</p>
+                    <p className="text-[11px] text-[#6B7280]">{member.role}{member.phone ? ` · ${member.phone}` : ''}</p>
+                  </div>
+                  <button onClick={() => { setEditingStaff(member); setForm({ name: member.name, role: member.role, phone: member.phone || '', base_salary: String(member.base_salary) }); setShowModal(true) }}
+                    className="shrink-0 h-9 w-9 flex items-center justify-center text-[#374151] hover:text-[#B08A1C] bg-gray-50 hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4] transition-colors">
+                    <Edit2 size={14} />
+                  </button>
+                </div>
+                <div className="mt-2.5 flex items-center justify-between">
+                  <span className="text-[12px] font-black text-[#111111]">{formatCurrency(member.base_salary)}</span>
+                  <button onClick={() => toggleStaffActive(member)}
+                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${member.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                    {member.is_active ? 'Active' : 'Inactive'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
@@ -362,7 +390,36 @@ export default function Attendance() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {reportLoading ? (
+              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">Loading report...</p>
+            ) : activeStaff.length === 0 ? (
+              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">No active staff members.</p>
+            ) : activeStaff.map(member => {
+              const stats = reportData[member.id] || { present: 0, half: 0, absent: 0, leave: 0 }
+              return (
+                <div key={member.id} className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] flex items-center justify-center font-black text-sm shrink-0 uppercase">{member.name.charAt(0)}</div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#111111] text-sm truncate">{member.name}</p>
+                      <p className="text-[11px] text-[#6B7280]">{member.role}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
+                    <div className="rounded-lg bg-green-50 py-1.5"><p className="text-[9px] font-black uppercase text-green-600">Present</p><p className="font-black text-green-700">{stats.present}</p></div>
+                    <div className="rounded-lg bg-orange-50 py-1.5"><p className="text-[9px] font-black uppercase text-orange-500">Half</p><p className="font-black text-orange-600">{stats.half}</p></div>
+                    <div className="rounded-lg bg-red-50 py-1.5"><p className="text-[9px] font-black uppercase text-red-600">Absent</p><p className="font-black text-red-700">{stats.absent}</p></div>
+                    <div className="rounded-lg bg-blue-50 py-1.5"><p className="text-[9px] font-black uppercase text-blue-600">Leave</p><p className="font-black text-blue-700">{stats.leave}</p></div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
@@ -431,7 +488,7 @@ export default function Attendance() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 p-3 rounded-xl font-bold text-sm hover:bg-gray-200">Cancel</button>
-                <button type="submit" disabled={submitting} className="flex-1 bg-[#B08A1C] text-white p-3 rounded-xl font-bold text-sm hover:bg-[#141414] disabled:opacity-50">{submitting ? 'Saving...' : 'Save Staff'}</button>
+                <button type="submit" disabled={submitting} className="flex-1 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] p-3 rounded-xl font-bold text-sm hover:bg-black disabled:opacity-50">{submitting ? 'Saving...' : 'Save Staff'}</button>
               </div>
             </form>
           </div>

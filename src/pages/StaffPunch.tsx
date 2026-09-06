@@ -199,7 +199,7 @@ export default function StaffPunch({ embedded = false }: StaffPunchProps) {
 
               {!todayRecord?.clock_in ? (
                 <button onClick={() => void punchIn()} disabled={saving}
-                  className="w-full bg-[#B08A1C] hover:bg-[#141414] text-white rounded-2xl py-5 text-xl font-black shadow-lg shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-3">
+                  className="w-full bg-[#141414] border border-[#D9A62E] hover:bg-black text-[#D9A62E] rounded-2xl py-5 text-xl font-black shadow-lg shadow-black/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-3">
                   <LogIn size={24} />{saving ? 'Recording...' : 'PUNCH IN'}
                 </button>
               ) : !todayRecord?.clock_out ? (
@@ -249,7 +249,7 @@ export default function StaffPunch({ embedded = false }: StaffPunchProps) {
             <p className="text-[13px] text-[#9BAB9A] mb-6">Remember to punch out when you leave!</p>
           )}
           <button onClick={reset}
-            className="bg-[#B08A1C] text-white px-8 py-3 rounded-xl font-black hover:bg-[#141414] active:scale-95 transition-all">
+            className="bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-8 py-3 rounded-xl font-black hover:bg-black active:scale-95 transition-all">
             Done
           </button>
         </div>

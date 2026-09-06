@@ -116,8 +116,8 @@ const ADJUST_TYPE_META: Record<AdjustModal['adjustType'], {
   },
   return: {
     label: 'Customer Return', sublabel: '+ Add Units', Icon: Undo2, isAddition: true,
-    border: 'border-emerald-500', bg: 'bg-emerald-50', iconOn: 'bg-emerald-500 text-white', iconOff: 'bg-gray-100 text-gray-400',
-    accentBg: 'bg-emerald-600', accentText: 'text-emerald-600', panelBg: 'bg-emerald-50/60', panelBorder: 'border-emerald-200',
+    border: 'border-violet-500', bg: 'bg-violet-50', iconOn: 'bg-violet-500 text-white', iconOff: 'bg-gray-100 text-gray-400',
+    accentBg: 'bg-violet-600', accentText: 'text-violet-600', panelBg: 'bg-violet-50/60', panelBorder: 'border-violet-200',
   },
   loss: {
     label: 'Loss / Damaged', sublabel: '− Deduct Units', Icon: Minus, isAddition: false,
@@ -307,7 +307,38 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
         ) : filteredLogs.length === 0 ? (
           <p className="text-center py-10 text-sm font-bold text-[#9CA3AF]">No stock movements match this filter.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            {/* Mobile card list */}
+            <div className="space-y-2.5 p-3 md:hidden">
+              {filteredLogs.map(log => {
+                const { user, note } = parseLoggedNote(log.reference_id)
+                return (
+                  <div key={log.id} className="rounded-xl border border-[#F0EEE9] bg-white p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-[13px] text-[#111111] truncate">{log.products?.name || '—'}</p>
+                        <p className="text-[11px] text-[#6B7280]">{log.products?.category || '—'}</p>
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${REASON_COLORS[log.reason] || 'bg-gray-100 text-gray-600'}`}>{log.reason.replace('_',' ')}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[11px]">
+                      <span className="text-[#9CA3AF]">
+                        {new Date(log.created_at).toLocaleDateString('en-MY')} · {new Date(log.created_at).toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}
+                      </span>
+                      <span className={`font-black ${log.adjustment > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{log.adjustment > 0 ? '+' : ''}{log.adjustment}</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-[#374151]">{log.old_quantity} → <span className="text-[#111111]">{log.new_quantity}</span></span>
+                      <span className="text-[#9CA3AF] font-semibold">{user}</span>
+                    </div>
+                    {note && <p className="mt-1.5 text-[11px] text-[#9CA3AF] truncate">{note}</p>}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-[#F8F7F4] text-[10px] font-black uppercase tracking-wider text-[#737B72]">
                   <tr>{['Date & Time', 'Type', 'Product', 'Category', 'Qty Delta', 'Before → After', 'User', 'Notes'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
@@ -330,7 +361,8 @@ function InventoryAnalytics({ products, downloadCSV }: { products: InventoryProd
                   })}
                 </tbody>
               </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -784,7 +816,53 @@ export default function Inventory() {
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {loading ? (
+              <p className="text-center py-10 text-sm font-bold text-[#6B7280] bg-white rounded-2xl border border-[#FDDBB4]/60">Loading inventory...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center py-10 text-sm font-bold text-[#6B7280] bg-white rounded-2xl border border-[#FDDBB4]/60">No products found.</p>
+            ) : filtered.map(p => {
+              const status = getStatus(p)
+              const pillClass = status === 'out' ? 'bg-red-50 text-red-700 border-red-200' : status === 'low' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              return (
+                <div key={String(p.id)} className="rounded-2xl border border-[#FDDBB4]/60 bg-white shadow-sm p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-[#111111] text-sm truncate">{p.name}</p>
+                      <p className="text-[11px] text-[#6B7280]">{p.category || '—'}</p>
+                    </div>
+                    <span className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 rounded-full text-[10px] font-black border ${pillClass}`}>
+                      {status === 'low' && <AlertTriangle size={9} />}
+                      {p.stock_quantity} Units
+                    </span>
+                  </div>
+                  <div className="mt-2.5 flex items-center justify-between text-[12px]">
+                    <span className="text-[#6B7280] font-semibold">Alert at <b className="text-[#374151]">{p.low_stock_alert || 5}</b></span>
+                    <span className="inline-flex items-center gap-1.5 font-black text-[#111111]">
+                      {formatCurrency(p.price)}
+                      <button onClick={() => startEditProduct(p)} title="Edit product" className="text-[#9CA3AF] hover:text-[#B08A1C]">
+                        <Edit2 size={12} />
+                      </button>
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button onClick={() => openAdjust(p)}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-9 bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] rounded-lg text-[11px] font-black hover:bg-orange-100">
+                      <RefreshCw size={12} /> Adjust
+                    </button>
+                    <button onClick={() => void openHistory(p)} title="Stock history"
+                      className="h-9 w-9 flex items-center justify-center bg-gray-50 text-gray-500 hover:text-[#B08A1C] hover:bg-[#FFF8F2] rounded-lg border border-transparent hover:border-[#FDDBB4]">
+                      <History size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl border border-[#FDDBB4]/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
@@ -897,7 +975,7 @@ export default function Inventory() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-[#374151] mb-1.5">Selling Price (₹) *</label>
                   <input type="number" required step="0.01" min="0" value={productForm.price} onChange={e => setProductForm(f => ({...f, price: e.target.value}))}
@@ -910,7 +988,7 @@ export default function Inventory() {
                     className="w-full border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]"
                     placeholder="0.00" />
                 </div>
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <label className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">
                     <PackagePlus size={11} /> Current Stock
                   </label>
@@ -1040,8 +1118,8 @@ export default function Inventory() {
                     {editingCat?.id === cat.id ? (
                       <div className="flex items-center gap-2 flex-1 mr-2">
                         <input value={editingCatName} onChange={e => setEditingCatName(e.target.value)} autoFocus
-                          className="flex-1 border border-[#FDDBB4]/60 p-1.5 rounded-lg text-sm font-bold outline-none focus:border-[#B08A1C]" />
-                        <button onClick={() => void handleSaveEditCat(cat)} className="text-[11px] font-black text-white bg-[#B08A1C] px-2.5 py-1.5 rounded-lg">Save</button>
+                          className="min-w-0 flex-1 border border-[#FDDBB4]/60 p-1.5 rounded-lg text-sm font-bold outline-none focus:border-[#B08A1C]" />
+                        <button onClick={() => void handleSaveEditCat(cat)} className="shrink-0 text-[11px] font-black text-white bg-[#B08A1C] px-2.5 py-1.5 rounded-lg">Save</button>
                         <button onClick={() => setEditingCat(null)} className="text-[11px] font-black text-[#6B7280] px-2 py-1.5 rounded-lg hover:bg-gray-100">✕</button>
                       </div>
                     ) : (
@@ -1166,7 +1244,7 @@ export default function Inventory() {
                           <Minus size={18} />
                         </button>
                         <input type="number" min="0" value={adjustModal.qty} onChange={e => setAdjustModal(m => m ? { ...m, qty: e.target.value } : m)}
-                          className={`flex-1 h-14 px-4 bg-white border-2 ${meta.border} rounded-xl text-center text-2xl font-black text-[#111111] outline-none`} />
+                          className={`min-w-0 flex-1 h-14 px-4 bg-white border-2 ${meta.border} rounded-xl text-center text-2xl font-black text-[#111111] outline-none`} />
                         <button type="button" onClick={() => bumpAdjustQty(1)}
                           className="shrink-0 flex h-14 w-14 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]">
                           <Plus size={18} />

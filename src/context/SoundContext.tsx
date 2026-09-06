@@ -49,8 +49,27 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   // into the login form, before Dashboard even mounts) means it's already
   // running well before an automatic alarm ever tries to play.
   useEffect(() => {
-    const unlock = () => { getAudioContext() }
-    const events: (keyof DocumentEventMap)[] = ['pointerdown', 'keydown', 'touchstart']
+    // Calling resume() alone is not always enough inside strict in-app
+    // WebViews (e.g. WhatsApp's browser on iOS): the JS-level state flips to
+    // 'running' but the underlying native audio session can stay closed
+    // until an actual sound has been played through it. Playing one
+    // silent buffer synchronously inside the gesture handler forces that
+    // audio route open, so later automatic sounds (the low-stock alarm)
+    // are audible even though nothing was heard on this first tap.
+    const unlock = () => {
+      const ctx = getAudioContext()
+      if (!ctx) return
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050)
+        const source = ctx.createBufferSource()
+        source.buffer = buffer
+        source.connect(ctx.destination)
+        source.start(0)
+      } catch {
+        // ignore — best-effort unlock
+      }
+    }
+    const events: (keyof DocumentEventMap)[] = ['pointerdown', 'keydown', 'touchstart', 'touchend', 'click']
     events.forEach(evt => document.addEventListener(evt, unlock, { passive: true }))
     return () => { events.forEach(evt => document.removeEventListener(evt, unlock)) }
   }, []);

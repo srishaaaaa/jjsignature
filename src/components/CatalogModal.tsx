@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { X, Search, ShoppingBag, Edit2, Trash2 } from 'lucide-react'
+import { X, Search, ShoppingBag, Edit2, Trash2, Scissors, Package } from 'lucide-react'
 import { useProductStore, type Product } from '../store/store'
 import { supabase } from '../lib/supabase'
 
@@ -188,7 +188,7 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
                   placeholder="Search by product name, Tamil name, or category..."
                   className="w-full pl-10 pr-4 py-3 bg-[#FAFAFA] border border-[#FDDBB4]/60 rounded-xl focus:outline-none focus:border-[#B08A1C] text-[13px] font-bold text-[#111111]" />
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
                 {categories.map(cat => (
                   <button key={cat} onClick={() => setActiveCategory(cat)}
                     className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeCategory === cat ? 'bg-[#141414] text-[#D9A62E]' : 'bg-[#FAFAFA] text-[#374151] hover:bg-[#F9FAFB] border border-[#FDDBB4]/60'}`}>
@@ -206,7 +206,7 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
               ) : error ? (
                 <div className="flex min-h-48 flex-col items-center justify-center gap-2 px-4 text-center text-red-500">
                   <p className="text-[13px] font-bold">Unable to load catalog items.</p>
-                  <button type="button" onClick={() => void fetchProducts(true)} className="rounded-lg bg-[#B08A1C] px-3 py-2 text-[11px] font-black text-white">Try again</button>
+                  <button type="button" onClick={() => void fetchProducts(true)} className="rounded-lg bg-[#141414] border border-[#D9A62E] px-3 py-2 text-[11px] font-black text-[#D9A62E] hover:bg-black">Try again</button>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-[#374151]/60 py-12">
@@ -233,8 +233,9 @@ export default function CatalogModal({ isOpen, onClose, onAdd }: CatalogModalPro
                       </div>
                       {product.nameTa && <p onClick={() => onAdd(product)} className="-mt-1 cursor-pointer truncate text-[10px] font-bold text-[#374151]">{product.nameTa}</p>}
                       <div onClick={() => onAdd(product)} className="cursor-pointer flex-1">
-                        <span className={`inline-block text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${product.itemType === 'service' ? 'text-purple-700 bg-purple-50 border-purple-200' : 'text-blue-700 bg-blue-50 border-blue-200'}`}>
-                          {product.itemType === 'service' ? '✂️ Service' : '📦 Product'}
+                        <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${product.itemType === 'service' ? 'text-purple-700 bg-purple-50 border-purple-200' : 'text-blue-700 bg-blue-50 border-blue-200'}`}>
+                          {product.itemType === 'service' ? <Scissors size={10} /> : <Package size={10} />}
+                          {product.itemType === 'service' ? 'Service' : 'Product'}
                         </span>
                       </div>
                       <div onClick={() => onAdd(product)} className="cursor-pointer">

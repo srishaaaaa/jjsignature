@@ -12,7 +12,15 @@
     background-color: #141414;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
+    /* `manipulation` alone still permits pinch-zoom, and modern mobile
+       browsers/WebViews (incl. WhatsApp's in-app browser) increasingly
+       ignore the viewport meta's user-scalable=no for accessibility. An
+       accidental pinch on a button-dense modal then zooms the page, and
+       any drag afterwards reveals blank canvas margin outside the zoomed
+       content — read by users as the whole UI "sliding" sideways.
+       Explicitly allowing only panning (no pinch-zoom) via touch-action
+       is honored even when the viewport meta is ignored. */
+    touch-action: pan-x pan-y;
     overflow-x: hidden;
     overscroll-behavior-y: none;
     width: 100%;
@@ -22,6 +30,7 @@
     margin: 0;
     padding: 0;
     height: 100%;
+    touch-action: pan-x pan-y;
     background-color: #141414;
     background-image:
       radial-gradient(circle at top left, rgba(176, 138, 28, 0.06), transparent 34%),
@@ -126,6 +135,7 @@
   width: 100%;
   max-width: 100vw;
   overflow: hidden;
+  touch-action: pan-x pan-y;
   background:
     radial-gradient(circle at top left, rgba(139, 28, 49, 0.05), transparent 30%),
     #FBFAF6;

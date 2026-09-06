@@ -1123,22 +1123,25 @@ export default function Dashboard() {
       <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-sm">
         <AlertCircle className="mx-auto text-red-400 mb-4" size={48} />
         <h2 className="text-2xl font-black mb-2">{l('Unauthorized', 'அன� மதி இல� லை')}</h2>
-        <Link to="/" className="px-6 py-3 bg-sageDark text-white rounded-xl font-bold inline-block mt-4">{l('Go Home', 'ம� கப� பிற� க� ')}</Link>
+        <Link to="/" className="px-6 py-3 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] rounded-xl font-bold inline-block mt-4 hover:bg-black">{l('Go Home', 'ம� கப� பிற� க� ')}</Link>
       </div>
     </div>
   )
 
   const allNavItems: Array<{ id: TabKey; icon: React.ReactNode; label: string }> = [
+    { id: 'overview',      icon: <LayoutDashboard size={20} />,  label: 'Overview' },
     { id: 'billing',       icon: <ShoppingCart size={20} />,     label: 'Billing Panel' },
     { id: 'advance_orders',icon: <FileText size={20} />,         label: 'Advance Orders' },
     { id: 'inventory',     icon: <Package size={20} />,           label: 'Inventory' },
     { id: 'history',       icon: <List size={20} />,             label: 'Order History' },
     { id: 'pos_analytics', icon: <BarChart2 size={20} />,        label: 'Analytics Dashboard' },
+    { id: 'whatsapp',      icon: <MessageCircle size={20} />,    label: 'WhatsApp Center' },
     { id: 'coupons',       icon: <Box size={20} />,              label: 'Coupons' },
     { id: 'expenses',      icon: <Receipt size={20} />,          label: 'Expenses' },
     { id: 'attendance',    icon: <Users size={20} />,            label: 'Attendance' },
+    { id: 'users',         icon: <ShieldCheck size={20} />,      label: 'Users' },
   ]
-  const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses'))
+  const navItems = allNavItems.filter(item => role === 'admin' || (item.id !== 'pos_analytics' && item.id !== 'coupons' && item.id !== 'expenses' && item.id !== 'users'))
 
   return (
     <div className="admin-shell h-screen min-h-screen bg-bgMain flex flex-col lg:flex-row overflow-hidden">
@@ -1197,8 +1200,8 @@ export default function Dashboard() {
                 'h-[56px] lg:w-full lg:h-[48px]',
                 sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
                 'px-0 py-1 lg:py-0',
-                'rounded-xl font-medium text-[11px] lg:text-[14px] transition-all overflow-hidden',
-                tab === item.id ? 'bg-white text-maroon-dark shadow-sm' : 'text-white/70 hover:bg-white/10 hover:text-white',
+                'rounded-xl font-bold text-[11px] lg:text-[14px] transition-all overflow-hidden',
+                tab === item.id ? 'bg-[#D9A62E] text-[#141414] shadow-sm' : 'text-white/70 hover:bg-white/10 hover:text-white',
               ].join(' ')}
             >
               <span className="shrink-0 flex items-center gap-1">
@@ -1221,7 +1224,7 @@ export default function Dashboard() {
               'h-[56px] lg:w-full lg:h-[48px]',
               sidebarCollapsed ? 'lg:w-[48px] lg:justify-center mx-auto' : 'lg:px-4',
               'px-0 py-1 lg:py-0',
-              'rounded-xl font-medium text-[11px] lg:text-[14px] transition-all text-white/70 hover:bg-white/10 hover:text-white lg:mt-auto mb-1 lg:mb-4 overflow-hidden',
+              'rounded-xl font-bold text-[11px] lg:text-[14px] transition-all text-white/70 hover:bg-red-500/15 hover:text-red-300 lg:mt-auto mb-1 lg:mb-4 overflow-hidden',
             ].join(' ')}
           >
             <span className="shrink-0"><Power size={20} /></span>
@@ -1234,6 +1237,7 @@ export default function Dashboard() {
       {/* Main */}
       <main className="flex-grow flex flex-col overflow-hidden">
         <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
+        <div className="mx-auto w-full max-w-[1600px]">
 
         {/* ΓöÇΓöÇ ANALYTICS TAB ΓöÇΓöÇ */}
 
@@ -1244,7 +1248,7 @@ export default function Dashboard() {
           return (
           <div className="space-y-6 rounded-[28px] bg-maroon-dark p-5 sm:p-6 lg:p-7 shadow-2xl border border-white/10 text-white">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-black text-[#111111]">{l('Analytics Dashboard', 'பகுப்பாய்வு தட்டு')}</h2>
+              <h2 className="text-xl font-black text-[#D9A62E]">{l('Analytics Dashboard', 'பகுப்பாய்வு தட்டு')}</h2>
               <div className="flex items-center gap-2">
                 <button onClick={() => void loadData()}
                   className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#FDDBB4]/40 rounded-xl text-[12px] font-bold text-[#374151] hover:bg-[#F9FAFB]">
@@ -1507,7 +1511,7 @@ export default function Dashboard() {
             </div>
 
             {/* Status summary cards */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: l('Total Requests', 'மொத்த கோரிக்கை'), val: analytics.waRequests,  bg: 'bg-blue-50',   color: 'text-blue-700',   border: 'border-blue-100' },
                 { label: l('Pending', 'நிலுவை'),                 val: analytics.waPending,   bg: 'bg-amber-50',  color: 'text-amber-700',  border: 'border-amber-100' },
@@ -1790,7 +1794,7 @@ export default function Dashboard() {
 
             <div className="flex flex-col gap-4 border-b border-[#E7E7E7] pb-4 md:flex-row md:items-center md:justify-between">
               {/* Sub-tabs */}
-              <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible no-scrollbar bg-[#F3F4F6] rounded-2xl p-1.5">
+              <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible hide-scrollbar bg-[#F3F4F6] rounded-2xl p-1.5">
                 {([
                   { id: 'revenue' as const,    label: 'Revenue' },
                   { id: 'today' as const,      label: "Today's Sales" },
@@ -1807,7 +1811,7 @@ export default function Dashboard() {
               {/* Date filter (hidden for Today's Sales) */}
               {posAnalyticsTab !== 'today' && (
                 <div className="flex flex-col gap-3 md:items-end w-full md:w-auto">
-                  <div className="flex items-center gap-2 rounded-2xl bg-[#F8F8F8] p-2 overflow-x-auto md:flex-wrap md:overflow-visible no-scrollbar w-full md:w-auto">
+                  <div className="flex items-center gap-2 rounded-2xl bg-[#F8F8F8] p-2 overflow-x-auto md:flex-wrap md:overflow-visible hide-scrollbar w-full md:w-auto">
                     <span className="shrink-0 text-[10px] font-bold uppercase text-[#6B7280] ml-1 mr-1">Period:</span>
                     {(['all', 'today', 'week', 'month', 'year'] as const).map(preset => (
                       <button key={preset} type="button" onClick={() => applyAnalyticsPreset(preset)}
@@ -2445,7 +2449,7 @@ export default function Dashboard() {
                 <div className="flex flex-wrap gap-2 items-center">
                   {(['today', 'week', 'month', 'custom'] as const).map(preset => (
                     <button key={preset} type="button" onClick={() => applyDatePreset(preset)}
-                      className={`min-h-[44px] px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${datePreset === preset ? 'bg-[#B08A1C] text-white shadow-sm' : 'bg-[#F9FAFB] text-[#374151] hover:bg-[#FDDBB4]/40'}`}>
+                      className={`min-h-[44px] px-3 py-1.5 rounded-xl text-[12px] font-black transition-colors ${datePreset === preset ? 'bg-[#141414] text-[#D9A62E] shadow-sm' : 'bg-[#F9FAFB] text-[#374151] hover:bg-[#FDDBB4]/40'}`}>
                       {preset === 'today' ? l('Today','இன்று') : preset === 'week' ? l('This Week','இந்த வாரம்') : preset === 'month' ? l('This Month','இந்த மாதம்') : l('Custom Range','தேர்வு')}
                     </button>
                   ))}
@@ -2470,13 +2474,13 @@ export default function Dashboard() {
                     </>
                   ) : (
                     <button type="submit" disabled={searchLoading}
-                      className="sm:col-span-2 min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#B08A1C] py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#7A5F17] disabled:opacity-60">
+                      className="sm:col-span-2 min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#141414] border border-[#D9A62E] py-2.5 text-[13px] font-bold text-[#D9A62E] shadow-sm transition-colors hover:bg-black disabled:opacity-60">
                       <Search size={14} /> {searchLoading ? l('Searching...','தேடுகிறது...') : l('Search Bills','தேடு')}
                     </button>
                   )}
                   {datePreset === 'custom' && (
                     <button type="submit" disabled={searchLoading}
-                      className="sm:col-span-2 lg:col-span-4 min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#B08A1C] py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#7A5F17] disabled:opacity-60">
+                      className="sm:col-span-2 lg:col-span-4 min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#141414] border border-[#D9A62E] py-2.5 text-[13px] font-bold text-[#D9A62E] shadow-sm transition-colors hover:bg-black disabled:opacity-60">
                       <Search size={14} /> {searchLoading ? l('Searching...','தேடுகிறது...') : l('Search Bills','தேடு')}
                     </button>
                   )}
@@ -2759,7 +2763,7 @@ export default function Dashboard() {
                   <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-[#6B7280]">{l('Coupon Code', 'கூப்பன் குறியீடு')} *</label>
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 rounded-xl border border-[#A7F3D0] bg-white px-3 py-2.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                      className="flex-1 rounded-xl border border-[#FDDBB4] bg-white px-3 py-2.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
                       placeholder="WELCOME10"
                       value={couponForm.code}
                       disabled={editingCouponId !== null}
@@ -2769,7 +2773,7 @@ export default function Dashboard() {
                       <button
                         type="button"
                         onClick={generateCouponCode}
-                        className="shrink-0 rounded-xl border border-[#B08A1C] bg-[#B08A1C] px-3 py-2.5 text-[11px] font-black text-white transition-colors hover:bg-[#741D2A]"
+                        className="shrink-0 rounded-xl border border-[#D9A62E] bg-[#141414] px-3 py-2.5 text-[11px] font-black text-[#D9A62E] transition-colors hover:bg-black"
                       >
                         Generate
                       </button>
@@ -2787,7 +2791,7 @@ export default function Dashboard() {
                       type="number"
                       min="1"
                       max="100"
-                      className="w-full rounded-xl border border-[#A7F3D0] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                      className="w-full rounded-xl border border-[#FDDBB4] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
                       placeholder="10"
                       value={couponForm.percentage}
                       onChange={e => setCouponForm(f => ({ ...f, percentage: Number(e.target.value) }))}
@@ -2798,7 +2802,7 @@ export default function Dashboard() {
                     <input
                       type="number"
                       min="0"
-                      className="w-full rounded-xl border border-[#A7F3D0] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                      className="w-full rounded-xl border border-[#FDDBB4] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
                       placeholder="0 = no minimum"
                       value={couponForm.min_order_value}
                       onChange={e => setCouponForm(f => ({ ...f, min_order_value: e.target.value }))}
@@ -2811,7 +2815,7 @@ export default function Dashboard() {
                     <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-[#6B7280]">{l('Expiry Date', 'காலாவதி தேதி')}</label>
                     <input
                       type="date"
-                      className="w-full rounded-xl border border-[#A7F3D0] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                      className="w-full rounded-xl border border-[#FDDBB4] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
                       value={couponForm.expiry_date}
                       onChange={e => setCouponForm(f => ({ ...f, expiry_date: e.target.value }))}
                     />
@@ -2821,7 +2825,7 @@ export default function Dashboard() {
                     <input
                       type="number"
                       min="1"
-                      className="w-full rounded-xl border border-[#A7F3D0] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
+                      className="w-full rounded-xl border border-[#FDDBB4] bg-white px-3 py-2.5 text-[12px] font-bold text-[#111111] outline-none transition-colors focus:border-[#B08A1C]"
                       placeholder="Unlimited"
                       value={couponForm.usage_limit}
                       onChange={e => setCouponForm(f => ({ ...f, usage_limit: e.target.value }))}
@@ -2831,7 +2835,7 @@ export default function Dashboard() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-[#B08A1C] py-3 text-[13px] font-black text-white shadow-sm transition-colors hover:bg-[#741D2A]"
+                  className="w-full rounded-xl bg-[#141414] border border-[#D9A62E] py-3 text-[13px] font-black text-[#D9A62E] shadow-sm transition-colors hover:bg-black"
                 >
                   {editingCouponId !== null ? l('Update Coupon', 'கூப்பனை புதுப்பி') : l('Create Coupon', 'கூப்பனை உருவாக்கு')}
                 </button>
@@ -2905,7 +2909,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => startEditCoupon(coupon)}
-                              className="rounded-full border border-[#A7F3D0] bg-white p-2 text-[#B08A1C] transition-colors hover:border-[#D8BA8A] hover:text-[#741D2A]"
+                              className="rounded-full border border-[#FDDBB4] bg-white p-2 text-[#B08A1C] transition-colors hover:border-[#B08A1C] hover:text-[#111111]"
                             >
                               <Edit2 size={14} />
                             </button>
@@ -2982,7 +2986,7 @@ export default function Dashboard() {
                 <div className="p-10 text-center text-[13px] font-bold text-[#6B7280]">{l('Loading users...', 'பயனர்கள் ஏற்றுகிறது...')}</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-[14px]">
+                  <table className="w-full min-w-[680px] text-[14px]">
                     <thead>
                       <tr className="bg-[#FAFAFA] border-b border-borderLight uppercase tracking-wider text-[11px] text-[#6B7280]">
                         <th className="text-left px-6 py-4 font-black">{l('Name', 'பெயர்')}</th>
@@ -3051,6 +3055,7 @@ export default function Dashboard() {
             </p>
           </div>
         )}
+        </div>
         </div>
         {/* Footer */}
         <div className="shrink-0 border-t border-gray-100 bg-white/80 py-2 text-center text-[12px] font-semibold text-[#7A8A78] tracking-wide print:hidden">

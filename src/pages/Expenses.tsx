@@ -173,9 +173,9 @@ export default function Expenses() {
         </div>
       )}
 
-      <div className="flex gap-2 bg-[#F3F4F6] rounded-2xl p-1.5 w-fit">
-        <button onClick={() => setTab('expenses')} className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${tab === 'expenses' ? 'bg-[#B08A1C] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111111]'}`}>Expenses</button>
-        <button onClick={() => setTab('categories')} className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${tab === 'categories' ? 'bg-[#B08A1C] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111111]'}`}>Categories</button>
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar">
+        <button onClick={() => setTab('expenses')} className={`shrink-0 px-3 sm:px-4 h-10 rounded-xl font-bold text-[13px] sm:text-sm whitespace-nowrap transition-colors ${tab === 'expenses' ? 'bg-[#141414] text-[#D9A62E]' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>Expenses</button>
+        <button onClick={() => setTab('categories')} className={`shrink-0 px-3 sm:px-4 h-10 rounded-xl font-bold text-[13px] sm:text-sm whitespace-nowrap transition-colors ${tab === 'categories' ? 'bg-[#141414] text-[#D9A62E]' : 'bg-white border border-[#FDDBB4]/60 text-[#374151] hover:bg-orange-50'}`}>Categories</button>
       </div>
 
       {tab === 'expenses' && (
@@ -223,7 +223,7 @@ export default function Expenses() {
               />
             </div>
             {/* Period presets */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
               <span className="shrink-0 text-[11px] font-black uppercase text-[#6B7280] mr-1">Period</span>
               {([
                 { id: 'all' as const, label: 'All Time' },
@@ -233,7 +233,7 @@ export default function Expenses() {
                 { id: 'year' as const, label: 'This Year' },
               ]).map(p => (
                 <button key={p.id} onClick={() => applyPreset(p.id)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap transition-all ${datePreset === p.id ? 'bg-[#111111] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#111111] border border-[#E5E7EB] bg-white'}`}>
+                  className={`shrink-0 h-9 px-3 rounded-lg text-[11px] font-black uppercase whitespace-nowrap transition-colors ${datePreset === p.id ? 'bg-[#141414] text-[#D9A62E]' : 'text-[#6B7280] hover:text-[#111111] border border-[#E5E7EB] bg-white'}`}>
                   {p.label}
                 </button>
               ))}
@@ -243,13 +243,39 @@ export default function Expenses() {
               <button onClick={handleExportCSV} className="flex items-center gap-2 border border-[#E5E7EB] bg-white text-[#374151] px-3 py-2 rounded-xl text-[12px] font-black hover:bg-[#F9FAFB] transition-colors">
                 <Download size={14} /> Export CSV
               </button>
-              <button onClick={() => setShowModal(true)} disabled={dbError} className="bg-[#B08A1C] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#141414] disabled:opacity-50">
+              <button onClick={() => setShowModal(true)} disabled={dbError} className="h-10 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-4 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-black disabled:opacity-50">
                 <Plus size={16} /> Record Expense
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {loading ? (
+              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">Loading...</p>
+            ) : filteredExpenses.length === 0 ? (
+              <p className="text-center p-8 text-[#6B7280] font-bold bg-white rounded-2xl border border-[#FDDBB4]/60">
+                {expenses.length === 0 ? 'No expenses recorded yet.' : 'No expenses in the selected date range.'}
+              </p>
+            ) : filteredExpenses.map(exp => (
+              <div key={exp.id} className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 p-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="bg-[#FFF8F2] text-[#B08A1C] border border-[#FDDBB4] px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
+                      {exp.expense_categories?.name || 'Unknown'}
+                    </span>
+                    <p className="mt-1.5 text-[11px] font-semibold text-[#6B7280]">{new Date(exp.expense_date).toLocaleDateString('en-MY')}</p>
+                  </div>
+                  <button onClick={() => handleDeleteExpense(exp.id)} className="shrink-0 h-9 w-9 flex items-center justify-center text-red-400 hover:text-red-600 bg-red-50 rounded-lg"><Trash2 size={14} /></button>
+                </div>
+                {exp.description && <p className="mt-2 text-[12px] text-[#374151]">{exp.description}</p>}
+                <p className="mt-2 text-[15px] font-black text-red-600">{formatCurrency(exp.amount)}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
@@ -296,38 +322,32 @@ export default function Expenses() {
             <h3 className="text-base font-black text-[#111111] mb-4">Add Category</h3>
             <form onSubmit={handleAddCategory} className="flex gap-2">
               <input type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="e.g. Utility Bills" className="flex-1 border border-[#FDDBB4]/60 p-2.5 rounded-xl text-sm font-bold outline-none focus:border-[#B08A1C]" required disabled={dbError} />
-              <button type="submit" disabled={dbError} className="bg-[#B08A1C] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#141414] disabled:opacity-50">Add</button>
+              <button type="submit" disabled={dbError} className="bg-[#141414] border border-[#D9A62E] text-[#D9A62E] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-black disabled:opacity-50">Add</button>
             </form>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-[#FDDBB4]/60 overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
-                <tr>
-                  <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151]">Category Name</th>
-                  <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] text-center">Status</th>
-                  <th className="px-4 py-3 text-[11px] font-black uppercase text-[#374151] text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.length === 0 ? (
-                  <tr><td colSpan={3} className="text-center p-6 text-[#6B7280] text-sm font-bold">No categories added.</td></tr>
-                ) : categories.map(cat => (
-                  <tr key={cat.id} className="border-b border-[#FDDBB4]/30 hover:bg-[#FAFAFA]">
-                    <td className="px-4 py-3 font-bold text-[#111111] text-sm">{cat.name}</td>
-                    <td className="px-4 py-3 text-center">
-                      <button onClick={() => toggleCategory(cat)} className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${cat.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+            <div className="px-4 py-3 bg-[#FAFAFA] border-b border-[#FDDBB4]/60">
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-[#374151]">All Categories ({categories.length})</h3>
+            </div>
+            {categories.length === 0 ? (
+              <p className="text-center p-6 text-[#6B7280] text-sm font-bold">No categories added.</p>
+            ) : (
+              <div className="divide-y divide-[#FDDBB4]/30">
+                {categories.map(cat => (
+                  <div key={cat.id} className="flex items-center justify-between gap-2 px-4 py-3">
+                    <span className="font-bold text-[#111111] text-sm truncate">{cat.name}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button onClick={() => toggleCategory(cat)} className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${cat.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
                         {cat.is_active ? 'Active' : 'Inactive'}
                       </button>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => handleDeleteCategory(cat)} className="text-red-400 hover:text-red-600 p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete category">
+                      <button onClick={() => handleDeleteCategory(cat)} className="h-8 w-8 flex items-center justify-center text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete category">
                         <Trash2 size={14} />
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -361,7 +381,7 @@ export default function Expenses() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 p-3 rounded-xl font-bold text-sm hover:bg-gray-200">Cancel</button>
-                <button type="submit" disabled={submitting} className="flex-1 bg-[#B08A1C] text-white p-3 rounded-xl font-bold text-sm hover:bg-[#141414] disabled:opacity-50">{submitting ? 'Saving...' : 'Save Expense'}</button>
+                <button type="submit" disabled={submitting} className="flex-1 bg-[#141414] border border-[#D9A62E] text-[#D9A62E] p-3 rounded-xl font-bold text-sm hover:bg-black disabled:opacity-50">{submitting ? 'Saving...' : 'Save Expense'}</button>
               </div>
             </form>
           </div>
