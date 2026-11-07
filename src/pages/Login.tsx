@@ -218,6 +218,7 @@ export default function Dashboard() {
   const [productAnalyticsSearch, setProductAnalyticsSearch] = useState('')
   const [datePreset, setDatePreset] = useState<'today' | 'week' | 'month' | 'custom' | ''>('')
   const [searchResults, setSearchResults] = useState<DashboardOrder[]>([])
+  const [historyVisible, setHistoryVisible] = useState(100)
   const [searchLoading, setSearchLoading] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -661,7 +662,7 @@ export default function Dashboard() {
       const mappedOrders = (oRes.data || []).map(r => toDashboardOrder(r as Record<string, unknown>))
       setCats((cRes.data || []) as Category[])
       setOrders(mappedOrders)
-      setSearchResults(mappedOrders.filter(o => normalizeOrderType(o.order_type) !== 'online_request').slice(0, 100))
+      setSearchResults(mappedOrders.filter(o => normalizeOrderType(o.order_type) !== 'online_request'))
       setCoupons((couponRes.data || []) as DashboardCoupon[])
 
       const orderIds = mappedOrders.map(o => o.id).filter(Boolean)
@@ -1008,6 +1009,7 @@ export default function Dashboard() {
   const runSearch = async (e?: FormEvent) => {
     e?.preventDefault()
     setSearchLoading(true)
+    setHistoryVisible(100)
     try {
       const invInput = search.invoiceNo.trim()
       const phoneInput = search.phone.trim()
@@ -2742,7 +2744,7 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="space-y-3 md:hidden">
-                {filteredSearchResults.slice(0, 50).map(o => {
+                {filteredSearchResults.slice(0, historyVisible).map(o => {
                   const billTypeLabel = normalizeOrderType(o.order_type) === 'manual_sale' ? 'MANUAL' : normalizeOrderMode(o.order_mode) === 'online' ? 'ONLINE' : 'OFFLINE'
                   const billTypeClass = normalizeOrderType(o.order_type) === 'manual_sale' ? 'bg-purple-50 text-purple-700' : normalizeOrderMode(o.order_mode) === 'online' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
                   return (
@@ -2831,7 +2833,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#FDDBB4]/30 bg-white">
-                    {filteredSearchResults.slice(0, 50).map(o => {
+                    {filteredSearchResults.slice(0, historyVisible).map(o => {
                       const billTypeLabel = normalizeOrderType(o.order_type) === 'manual_sale' ? 'MANUAL' : normalizeOrderMode(o.order_mode) === 'online' ? 'ONLINE' : 'OFFLINE'
                       const billTypeClass = normalizeOrderType(o.order_type) === 'manual_sale' ? 'bg-purple-50 text-purple-700' : normalizeOrderMode(o.order_mode) === 'online' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
                       return (
@@ -2923,6 +2925,14 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
+              {filteredSearchResults.length > historyVisible && (
+                <div className="mt-3 flex justify-center">
+                  <button onClick={() => setHistoryVisible(v => v + 100)}
+                    className="rounded-xl bg-[#B08A1C] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#7A5F17]">
+                    {l('Show more', 'மேலும் காட்டு')} ({historyVisible} / {filteredSearchResults.length})
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
